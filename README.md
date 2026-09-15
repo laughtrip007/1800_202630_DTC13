@@ -68,7 +68,7 @@ elmo-hikes/
 ## Contributors
 - Lance - a BCIT CST Student with a passion for solving problems and creating new things that help make life easier.
  Fun fact: Plays basketball and loves Pop 
-- **Teammate Name** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
+
 
 ---
 
