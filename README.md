@@ -66,6 +66,8 @@ elmo-hikes/
 
 
 ## Contributors
+- **Raine Omand** - A student with a good work ethic and determination!
+-
 - Lance - a BCIT CST Student with a passion for solving problems and creating new things that help make life easier.
  Fun fact: Plays basketball and loves Pop 
 
