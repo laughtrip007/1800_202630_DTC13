@@ -67,7 +67,7 @@ elmo-hikes/
 
 ## Contributors
 - **Raine Omand** - A student with a good work ethic and determination!
-- **Teammate Name** - BCIT CST Student, Frontend enthusiast with a knack for creative design. Fun fact: Has a collection of over 50 houseplants.
+-
 
 ---
 
