@@ -9,5 +9,11 @@
   },
   "devDependencies": {
     "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@tailwindcss/vite": "^4.3.3",
+    "bootstrap": "^5.3.8",
+    "tailwindcss": "^4.3.3"
   }
 }
