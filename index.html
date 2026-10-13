@@ -13,6 +13,8 @@
       crossorigin="anonymous"
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module" src="/src/site-navbar.js"></script>
+
     <style>
       body {
         padding-bottom: 85px;
@@ -33,10 +35,11 @@
     <!------------------------------>
     <!-- Stuff for body goes here -->
     <!-- Welcome Banner Start-->
+    <site-navbar></site-navbar>
     <div class="px-3 py-4 text-center">
       <img
         class="d-block mx-auto mb-3"
-        src="images/SafeLink Logo.png"
+        src="images/SafeLink-Logo.png"
         alt="SafeLink logo"
         width="180"
         height="180"
@@ -89,6 +92,10 @@
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
+    <script type="module" src="./src/app.js"></script>
     <script type="module" src="./src/main.js"></script>
+    <script type="module" src="/src/firebaseConfig.js"></script>
+    <script type="module" src="/src/authentication.js"></script>
+    <script type="module" src="/src/loginSignup.js"></script>
   </body>
 </html>
