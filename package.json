@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "firebase": "^13.0.0"
   }
 }
