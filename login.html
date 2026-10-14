@@ -35,44 +35,55 @@
     <!-- Stuff for body goes here -->
     <!-- Welcome Banner Start-->
     <site-navbar></site-navbar>
-    <div class="px-3 py-4 text-center">
-      <img
-        class="d-block mx-auto mb-3"
-        src="images/SafeLink-Logo.png"
-        alt="SafeLink logo"
-        width="180"
-        height="180"
-      />
-      <h1 class="fw-bold">Welcome to SafeLink</h1>
-      <p class="text-body-secondary mx-auto">
-        Check suspicious links quickly and safely.
-      </p>
-      <div class="d-grid gap-2 col-10 mx-auto">
-        <button class="btn btn-success btn-lg">Check Links</button>
-        <button class="btn btn-outline-success btn-lg">Learn More</button>
-      </div>
-    </div>
-    <!-- Welcome Banner End-->
-    <!-- Call to Action Banner Start -->
-    <section class="px-3 py-4 text-center">
-      <div class="mx-auto">
-        <h2 class="fw-bold">Get Started with SafeLink</h2>
-        <p class="text-body-secondary mt-3 mb-4">
-          Sign up or log in to start checking suspicious links.
-        </p>
-        <div class="d-grid gap-2 col-10 mx-auto">
-          <a href="signup.html" class="btn btn-success btn-lg"> Sign Up </a>
-          <a href="login.html" class="btn btn-outline-success btn-lg">
-            Log In
-          </a>
+    <div class="container py-5" style="max-width: 420px;">
+        <!-- Alerts -->
+        <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- Login -->
+        <div id="loginView">
+            <h3 class="mb-3 text-center">Login</h3>
+            <form id="loginForm" novalidate>
+                <div class="mb-3">
+                    <input type="email" id="loginEmail" class="form-control" placeholder="Email" required />
+                </div>
+                <div class="mb-3">
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Password" required />
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <small class="d-block mt-3 text-center">
+                Don’t have an account?
+                <a href="#" id="toSignup">Sign up</a>
+            </small>
         </div>
-      </div>
-    </section>
+
+        <!-- Signup -->
+        <div id="signupView" class="d-none">
+            <h3 class="mb-3 text-center">Sign Up</h3>
+            <form id="signupForm" novalidate>
+                <div class="mb-3">
+                    <input type="text" id="signupName" class="form-control" placeholder="First and Last Name"
+                        aria-label="Full name" required />
+                </div>
+                <div class="mb-3">
+                    <input type="email" id="signupEmail" class="form-control" placeholder="Email" required />
+                </div>
+                <div class="mb-3">
+                    <input type="password" id="signupPassword" class="form-control" placeholder="Password" required />
+                </div>
+                <button type="submit" class="btn btn-success w-100">Create Account</button>
+            </form>
+            <small class="d-block mt-3 text-center">
+                Already have an account?
+                <a href="#" id="toLogin">Login</a>
+            </small>
+        </div>
+    </div>
     <!-- Call to Action Banner End -->
     <!-- Navbar Start -->
     <nav class="navbar fixed-bottom bg-success bottom-nav">
       <div class="container-fluid justify-content-around text-center">
-        <a class="nav-link text-white" href="#">
+        <a class="nav-link text-white" href="index.html">
           <div class="text-2xl">⌂</div>
           <small>Home</small>
         </a>
