@@ -34,9 +34,10 @@
     <!-- Your HTML Layout go here -->
     <!------------------------------>
     <!-- Stuff for body goes here -->
-    <!-- Welcome Banner Start-->
     <site-navbar></site-navbar>
-    <div class="px-3 py-4 text-center">
+
+    <!-- Welcome Banner Start-->
+    <section class="px-3 py-4 text-center">
       <img
         class="d-block mx-auto mb-3"
         src="images/SafeLink-Logo.png"
@@ -56,34 +57,81 @@
         >
           Check Links
         </button>
-
-        <button type="button" class="btn btn-outline-success btn-lg">
+        <button
+          type="button"
+          class="btn btn-outline-success btn-lg btn-1"
+          onclick="document.getElementById('learn-more').hidden = false"
+          aria-controls="learn-more"
+        >
           Learn More
         </button>
       </div>
-    </div>
+    </section>
     <!-- Welcome Banner End-->
+
+    <!-- Learn more start -->
+    <section
+      id="learn-more"
+      class="container px-3 py-4"
+      aria-labelledby="learn-more-title"
+      hidden
+    >
+      <div class="bg-white border rounded-3 p-4">
+        <h2 id="learn-more-title" class="h4 fw-bold text-center mb-4">
+          How SafeLink Works
+        </h2>
+        <ul class="mb-0" style="list-style-type: disc; padding-left: 1.5rem;">
+          <li class="mb-3">
+            <strong>Copy a link</strong><br />
+            Copy the link you want to check.
+          </li>
+          <li class="mb-3">
+            <strong>Paste it into SafeLink</strong><br />
+            Open Check Links and enter your link.
+          </li>
+          <li>
+            <strong>Review the result</strong><br />
+            Read the result before deciding whether to open the link.
+          </li>
+        </ul>
+        <div class="text-center mt-3">
+          <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            onclick="document.getElementById('learn-more').hidden = true"
+          >
+            Show Less ↑
+          </button>
+        </div>
+      </div>
+    </section>
+    <!-- Learn more end -->
+
     <!-- Call to Action Banner Start -->
     <section class="px-3 py-4 text-center">
       <div class="mx-auto">
-        <h2 class="fw-bold">Get Started with SafeLink</h2>
+        <h2 class="fw-bold">Your SafeLink Account</h2>
         <p class="text-body-secondary mt-3 mb-4">
-          Sign up or log in to start checking suspicious links.
+          Already have an account? Sign in, or create one to get started.
         </p>
         <div class="d-grid gap-2 col-10 mx-auto">
           <button
-            onclick="window.location.href = 'login.html'"
             type="button"
-            class="btn btn-info btn-lg"
+            class="btn btn-lg btn-1"
+            onclick="window.location.href = 'login.html'"
           >
-            Login/Signup
+            Login / Sign Up
           </button>
         </div>
       </div>
     </section>
     <!-- Call to Action Banner End -->
+
     <!-- Navbar Start -->
-    <nav class="navbar fixed-bottom bg-success bottom-nav">
+    <nav
+      class="navbar fixed-bottom bg-success bottom-nav"
+      aria-label="Bottom navigation"
+    >
       <div class="container-fluid justify-content-around text-center">
         <a class="nav-link text-white" href="index.html">
           <div class="text-2xl">⌂</div>
@@ -100,6 +148,7 @@
       </div>
     </nav>
     <!-- Navbar End -->
+
     <!---------------------------------------------->
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
