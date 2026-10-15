@@ -1,1 +1,19 @@
+.btn-1 {
+  --bs-btn-color: #198754;
+  --bs-btn-bg: #ffffff;
+  --bs-btn-border-color: #198754;
 
+  --bs-btn-hover-color: #146c43;
+  --bs-btn-hover-bg: #e8f5ed;
+  --bs-btn-hover-border-color: #146c43;
+
+  --bs-btn-active-color: #146c43;
+  --bs-btn-active-bg: #d1e7dd;
+  --bs-btn-active-border-color: #146c43;
+
+  --bs-btn-focus-shadow-rgb: 25, 135, 84;
+}
+
+#learn-more {
+  scroll-margin-top: 24px;
+}
