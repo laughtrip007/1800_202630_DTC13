@@ -14,20 +14,6 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module" src="/src/site-navbar.js"></script>
-
-    <style>
-      body {
-        padding-bottom: 85px;
-      }
-
-      .bottom-nav {
-        min-height: 70px;
-      }
-
-      .bottom-nav .nav-link {
-        width: 33.33%;
-      }
-    </style>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
@@ -38,6 +24,16 @@
     <site-navbar></site-navbar>
 
     <div class="container py-4">
+      <!-- Back Button Start -->
+      <a
+        href="link-checker.html"
+        class="btn btn-outline-success btn-lg d-inline-flex align-items-center gap-2 mb-4"
+      >
+        <span class="fs-4">←</span>
+        <span>Go Back</span>
+      </a>
+      <!-- Back Button End -->
+
       <!-- Header Card -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body text-center">
