@@ -14,20 +14,6 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module" src="/src/site-navbar.js"></script>
-
-    <style>
-      body {
-        padding-bottom: 85px;
-      }
-
-      .bottom-nav {
-        min-height: 70px;
-      }
-
-      .bottom-nav .nav-link {
-        width: 33.33%;
-      }
-    </style>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
@@ -38,6 +24,23 @@
     <site-navbar></site-navbar>
 
     <div class="container py-4">
+
+      <!-- Back Button Start -->
+      <a
+        href="index.html"
+        class="btn btn-outline-success btn-lg d-inline-flex align-items-center gap-2 mb-4"
+      >
+        <span class="fs-4">←</span>
+        <span>Go Back</span>
+      </a>
+      <!-- Back Button End -->
+      
+      <div
+        class="card border-0 shadow-sm mb-4 text-center bg-success text-white"
+      >
+        <h1>Link Checker</h1>
+      </div>
+
       <!-- Info Card -->
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body text-center">
@@ -96,7 +99,7 @@
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
-    <script type="module" src="./src/app.js"></script>
+    <script type="module" src="/src/app.js"></script>
     <script type="module" src="/src/firebaseConfig.js"></script>
     <script type="module" src="/src/authentication.js"></script>
     <script type="module" src="/src/loginSignup.js"></script>

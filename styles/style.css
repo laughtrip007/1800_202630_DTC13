@@ -1,19 +1,31 @@
-.btn-1 {
-  --bs-btn-color: #198754;
-  --bs-btn-bg: #ffffff;
-  --bs-btn-border-color: #198754;
-
-  --bs-btn-hover-color: #146c43;
-  --bs-btn-hover-bg: #e8f5ed;
-  --bs-btn-hover-border-color: #146c43;
-
-  --bs-btn-active-color: #146c43;
-  --bs-btn-active-bg: #d1e7dd;
-  --bs-btn-active-border-color: #146c43;
-
-  --bs-btn-focus-shadow-rgb: 25, 135, 84;
+.feature-card {
+  border: 2px solid transparent !important;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-#learn-more {
-  scroll-margin-top: 24px;
+.feature-card:hover {
+  transform: translateY(-5px);
+  background-color: #d1e7dd;
+  border-color: #198754 !important;
+  box-shadow: 0 0.75rem 1.5rem rgba(25, 135, 84, 0.2) !important;
+}
+
+.feature-card:hover h2 {
+  color: #146c43;
+}
+
+body {
+  padding-bottom: 85px;
+}
+
+.bottom-nav {
+  min-height: 70px;
+}
+
+.bottom-nav .nav-link {
+  width: 33.33%;
 }

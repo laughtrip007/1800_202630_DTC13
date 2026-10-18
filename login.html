@@ -14,19 +14,6 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module" src="/src/site-navbar.js"></script>
-    <style>
-      body {
-        padding-bottom: 85px;
-      }
-
-      .bottom-nav {
-        min-height: 70px;
-      }
-
-      .bottom-nav .nav-link {
-        width: 33.33%;
-      }
-    </style>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
@@ -35,49 +22,81 @@
     <!-- Stuff for body goes here -->
     <!-- Welcome Banner Start-->
     <site-navbar></site-navbar>
-    <div class="container py-5" style="max-width: 420px;">
-        <!-- Alerts -->
-        <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
+    <div class="container py-5" style="max-width: 420px">
+      <!-- Alerts -->
+      <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
 
-        <!-- Login -->
-        <div id="loginView">
-            <h3 class="mb-3 text-center">Login</h3>
-            <form id="loginForm" novalidate>
-                <div class="mb-3">
-                    <input type="email" id="loginEmail" class="form-control" placeholder="Email" required />
-                </div>
-                <div class="mb-3">
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Password" required />
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Login</button>
-            </form>
-            <small class="d-block mt-3 text-center">
-                Don’t have an account?
-                <a href="#" id="toSignup">Sign up</a>
-            </small>
-        </div>
+      <!-- Login -->
+      <div id="loginView">
+        <h3 class="mb-3 text-center">Login</h3>
+        <form id="loginForm" novalidate>
+          <div class="mb-3">
+            <input
+              type="email"
+              id="loginEmail"
+              class="form-control"
+              placeholder="Email"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <input
+              type="password"
+              id="loginPassword"
+              class="form-control"
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+        <small class="d-block mt-3 text-center">
+          Don’t have an account?
+          <a href="#" id="toSignup">Sign up</a>
+        </small>
+      </div>
 
-        <!-- Signup -->
-        <div id="signupView" class="d-none">
-            <h3 class="mb-3 text-center">Sign Up</h3>
-            <form id="signupForm" novalidate>
-                <div class="mb-3">
-                    <input type="text" id="signupName" class="form-control" placeholder="First and Last Name"
-                        aria-label="Full name" required />
-                </div>
-                <div class="mb-3">
-                    <input type="email" id="signupEmail" class="form-control" placeholder="Email" required />
-                </div>
-                <div class="mb-3">
-                    <input type="password" id="signupPassword" class="form-control" placeholder="Password" required />
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Create Account</button>
-            </form>
-            <small class="d-block mt-3 text-center">
-                Already have an account?
-                <a href="#" id="toLogin">Login</a>
-            </small>
-        </div>
+      <!-- Signup -->
+      <div id="signupView" class="d-none">
+        <h3 class="mb-3 text-center">Sign Up</h3>
+        <form id="signupForm" novalidate>
+          <div class="mb-3">
+            <input
+              type="text"
+              id="signupName"
+              class="form-control"
+              placeholder="First and Last Name"
+              aria-label="Full name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <input
+              type="email"
+              id="signupEmail"
+              class="form-control"
+              placeholder="Email"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <input
+              type="password"
+              id="signupPassword"
+              class="form-control"
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            Create Account
+          </button>
+        </form>
+        <small class="d-block mt-3 text-center">
+          Already have an account?
+          <a href="#" id="toLogin">Login</a>
+        </small>
+      </div>
     </div>
     <!-- Call to Action Banner End -->
     <!-- Navbar Start -->
@@ -102,6 +121,7 @@
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
-    <script type="module" src="./src/loginSignup.js"></script>
+    <script type="module" src="/src/app.js"></script>
+    <script type="module" src="/src/loginSignup.js"></script>
   </body>
 </html>

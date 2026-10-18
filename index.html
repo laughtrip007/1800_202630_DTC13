@@ -14,20 +14,6 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script type="module" src="/src/site-navbar.js"></script>
-
-    <style>
-      body {
-        padding-bottom: 85px;
-      }
-
-      .bottom-nav {
-        min-height: 70px;
-      }
-
-      .bottom-nav .nav-link {
-        width: 33.33%;
-      }
-    </style>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
@@ -36,96 +22,79 @@
     <!-- Stuff for body goes here -->
     <site-navbar></site-navbar>
 
-    <!-- Welcome Banner Start-->
-    <section class="px-3 py-4 text-center">
-      <img
-        class="d-block mx-auto mb-3"
-        src="images/SafeLink-Logo.png"
-        alt="SafeLink logo"
-        width="180"
-        height="180"
-      />
-      <h1 class="fw-bold">Welcome to SafeLink</h1>
-      <p class="text-body-secondary mx-auto">
-        Check suspicious links quickly and safely.
-      </p>
-      <div class="d-grid gap-2 col-10 mx-auto">
-        <button
-          type="button"
-          class="btn btn-success btn-lg"
-          onclick="window.location.href = 'link-checker.html'"
-        >
-          Check Links
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline-success btn-lg btn-1"
-          onclick="document.getElementById('learn-more').hidden = false"
-          aria-controls="learn-more"
-        >
-          Learn More
-        </button>
-      </div>
-    </section>
-    <!-- Welcome Banner End-->
+    <!-- Main Content Start -->
+    <main class="container py-4" style="max-width: 420px">
 
-    <!-- Learn more start -->
-    <section
-      id="learn-more"
-      class="container px-3 py-4"
-      aria-labelledby="learn-more-title"
-      hidden
-    >
-      <div class="bg-white border rounded-3 p-4">
-        <h2 id="learn-more-title" class="h4 fw-bold text-center mb-4">
-          How SafeLink Works
-        </h2>
-        <ul class="mb-0" style="list-style-type: disc; padding-left: 1.5rem;">
-          <li class="mb-3">
-            <strong>Copy a link</strong><br />
-            Copy the link you want to check.
-          </li>
-          <li class="mb-3">
-            <strong>Paste it into SafeLink</strong><br />
-            Open Check Links and enter your link.
-          </li>
-          <li>
-            <strong>Review the result</strong><br />
-            Read the result before deciding whether to open the link.
-          </li>
-        </ul>
-        <div class="text-center mt-3">
-          <button
-            type="button"
-            class="btn btn-outline-secondary btn-sm"
-            onclick="document.getElementById('learn-more').hidden = true"
-          >
-            Show Less ↑
-          </button>
+      <!-- App Heading -->
+      <section class="mb-4 text-center">
+        <div class="d-flex justify-content-center">
+          <img
+            src="images/SafeLink-Logo.png"
+            alt="SafeLink logo"
+            width="360"
+            class="img-fluid"
+          />
+        </div>
+        <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
+      </section>
+
+      <!-- Check a Link -->
+      <a href="link-checker.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">🔗</div>
+            <h2 class="h4 fw-bold">Check a Link</h2>
+
+            <p class="text-body-secondary mb-0">
+              Check if a link may be suspicious.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Scam Reports -->
+      <a href="scam_reports.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">⚠️</div>
+            <h2 class="h4 fw-bold">Scam Reports</h2>
+            <p class="text-body-secondary mb-0">
+              View reports and learn about common scams.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Future Feature -->
+      <div class="card border-0 shadow-sm mb-4 opacity-75">
+        <div class="card-body text-center py-4">
+          <div class="fs-1 mb-2">✉️</div>
+
+          <h2 class="h4 fw-bold">Verify a Message</h2>
+
+          <p class="text-body-secondary mb-0">Coming soon</p>
         </div>
       </div>
-    </section>
-    <!-- Learn more end -->
 
-    <!-- Call to Action Banner Start -->
-    <section class="px-3 py-4 text-center">
-      <div class="mx-auto">
-        <h2 class="fw-bold">Your SafeLink Account</h2>
-        <p class="text-body-secondary mt-3 mb-4">
-          Already have an account? Sign in, or create one to get started.
+      <!-- CTA Section Start -->
+      <section class="text-center bg-white border rounded-3 shadow-sm p-4 mb-3">
+        <h2 class="h4 fw-bold">Get More from SafeLink</h2>
+        <p class="text-body-secondary mb-3">
+          Sign in or create an account to access more SafeLink features.
         </p>
-        <div class="d-grid gap-2 col-10 mx-auto">
+        <div class="d-grid gap-2">
           <button
             type="button"
-            class="btn btn-lg btn-1"
+            class="btn btn-success"
             onclick="window.location.href = 'login.html'"
           >
             Login / Sign Up
           </button>
         </div>
-      </div>
-    </section>
-    <!-- Call to Action Banner End -->
+      </section>
+      <!-- CTA Section End -->
+    </main>
+    <!-- Main Content End -->
 
     <!-- Navbar Start -->
     <nav
@@ -153,7 +122,7 @@
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
-    <script type="module" src="./src/app.js"></script>
+    <script type="module" src="/src/app.js"></script>
     <script type="module" src="/src/firebaseConfig.js"></script>
     <script type="module" src="/src/authentication.js"></script>
   </body>
