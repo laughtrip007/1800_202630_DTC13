@@ -14,6 +14,18 @@
   --bs-btn-focus-shadow-rgb: 25, 135, 84;
 }
 
+body {
+  padding-bottom: 85px;
+}
+
+.bottom-nav {
+  min-height: 70px;
+}
+
+.bottom-nav .nav-link {
+  width: 33.33%;
+}
+
 #learn-more {
   scroll-margin-top: 24px;
 }
