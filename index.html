@@ -13,64 +13,96 @@
       crossorigin="anonymous"
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style>
-      body {
-        padding-bottom: 85px;
-      }
-
-      .bottom-nav {
-        min-height: 70px;
-      }
-
-      .bottom-nav .nav-link {
-        width: 33.33%;
-      }
-    </style>
+    <script type="module" src="/src/site-navbar.js"></script>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
     <!-- Your HTML Layout go here -->
     <!------------------------------>
     <!-- Stuff for body goes here -->
-    <!-- Welcome Banner Start-->
-    <div class="px-3 py-4 text-center">
-      <img
-        class="d-block mx-auto mb-3"
-        src="images/SafeLink Logo.png"
-        alt="SafeLink logo"
-        width="180"
-        height="180"
-      />
-      <h1 class="fw-bold">Welcome to SafeLink</h1>
-      <p class="text-body-secondary mx-auto">
-        Check suspicious links quickly and safely.
-      </p>
-      <div class="d-grid gap-2 col-10 mx-auto">
-        <button class="btn btn-success btn-lg">Check Links</button>
-        <button class="btn btn-outline-success btn-lg">Learn More</button>
-      </div>
-    </div>
-    <!-- Welcome Banner End-->
-    <!-- Call to Action Banner Start -->
-    <section class="px-3 py-4 text-center">
-      <div class="mx-auto">
-        <h2 class="fw-bold">Get Started with SafeLink</h2>
-        <p class="text-body-secondary mt-3 mb-4">
-          Sign up or log in to start checking suspicious links.
-        </p>
-        <div class="d-grid gap-2 col-10 mx-auto">
-          <a href="signup.html" class="btn btn-success btn-lg"> Sign Up </a>
-          <a href="login.html" class="btn btn-outline-success btn-lg">
-            Log In
-          </a>
+    <site-navbar></site-navbar>
+
+    <!-- Main Content Start -->
+    <main class="container py-4" style="max-width: 420px">
+
+      <!-- App Heading -->
+      <section class="mb-4 text-center">
+        <div class="d-flex justify-content-center">
+          <img
+            src="images/SafeLink-Logo.png"
+            alt="SafeLink logo"
+            width="360"
+            class="img-fluid"
+          />
+        </div>
+        <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
+      </section>
+
+      <!-- Check a Link -->
+      <a href="link-checker.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">🔗</div>
+            <h2 class="h4 fw-bold">Check a Link</h2>
+
+            <p class="text-body-secondary mb-0">
+              Check if a link may be suspicious.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Scam Reports -->
+      <a href="scam_reports.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">⚠️</div>
+            <h2 class="h4 fw-bold">Scam Reports</h2>
+            <p class="text-body-secondary mb-0">
+              View reports and learn about common scams.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Future Feature -->
+      <div class="card border-0 shadow-sm mb-4 opacity-75">
+        <div class="card-body text-center py-4">
+          <div class="fs-1 mb-2">✉️</div>
+
+          <h2 class="h4 fw-bold">Verify a Message</h2>
+
+          <p class="text-body-secondary mb-0">Coming soon</p>
         </div>
       </div>
-    </section>
-    <!-- Call to Action Banner End -->
+
+      <!-- CTA Section Start -->
+      <section class="text-center bg-white border rounded-3 shadow-sm p-4 mb-3">
+        <h2 class="h4 fw-bold">Get More from SafeLink</h2>
+        <p class="text-body-secondary mb-3">
+          Sign in or create an account to access more SafeLink features.
+        </p>
+        <div class="d-grid gap-2">
+          <button
+            type="button"
+            class="btn btn-success"
+            onclick="window.location.href = 'login.html'"
+          >
+            Login / Sign Up
+          </button>
+        </div>
+      </section>
+      <!-- CTA Section End -->
+    </main>
+    <!-- Main Content End -->
+
     <!-- Navbar Start -->
-    <nav class="navbar fixed-bottom bg-success bottom-nav">
+    <nav
+      class="navbar fixed-bottom bg-success bottom-nav"
+      aria-label="Bottom navigation"
+    >
       <div class="container-fluid justify-content-around text-center">
-        <a class="nav-link text-white" href="#">
+        <a class="nav-link text-white" href="index.html">
           <div class="text-2xl">⌂</div>
           <small>Home</small>
         </a>
@@ -85,10 +117,13 @@
       </div>
     </nav>
     <!-- Navbar End -->
+
     <!---------------------------------------------->
     <!-- Your own JavaScript functions go here    -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
-    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="/src/app.js"></script>
+    <script type="module" src="/src/firebaseConfig.js"></script>
+    <script type="module" src="/src/authentication.js"></script>
   </body>
 </html>
