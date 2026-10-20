@@ -1,8 +1,20 @@
 const resultText = document.querySelector("#resultText");
+const checkAnotherBtn = document.querySelector("#checkAnotherBtn");
 
-const randomResult = Math.random();
+// Get previously checked URL
+const checkedURL = localStorage.getItem("checkedURL");
 
-if (randomResult > 0.5) {
+// Generate placeholder result
+const result = Math.random() > 0.5 ? "safe" : "unsafe";
+
+// Log for testing
+console.log({
+  url: checkedURL,
+  result: result,
+});
+
+// Display result
+if (result === "safe") {
   resultText.textContent = "SAFE!";
   resultText.classList.add("text-success");
 } else {
@@ -10,8 +22,7 @@ if (randomResult > 0.5) {
   resultText.classList.add("text-danger");
 }
 
-const checkAnotherBtn = document.querySelector("#checkAnotherBtn");
-
+// Return to link checker
 checkAnotherBtn.addEventListener("click", () => {
   window.location.href = "link-checker.html";
 });
