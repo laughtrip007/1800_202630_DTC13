@@ -1,3 +1,6 @@
+import { db, auth } from "./firebaseConfig.js";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
 const resultText = document.querySelector("#resultText");
 const checkAnotherBtn = document.querySelector("#checkAnotherBtn");
 
@@ -6,12 +9,6 @@ const checkedURL = localStorage.getItem("checkedURL");
 
 // Generate placeholder result
 const result = Math.random() > 0.5 ? "safe" : "unsafe";
-
-// Log for testing
-console.log({
-  url: checkedURL,
-  result: result,
-});
 
 // Display result
 if (result === "safe") {
@@ -22,7 +19,26 @@ if (result === "safe") {
   resultText.classList.add("text-danger");
 }
 
-// Return to link checker
+// Save to Firestore
+saveLinkCheck();
+
+async function saveLinkCheck() {
+  try {
+    await addDoc(collection(db, "linkChecks"), {
+      userID: auth.currentUser ? auth.currentUser.uid : "anonymous",
+      url: checkedURL,
+      result: result,
+      checkedAt: serverTimestamp(),
+    });
+
+    console.log("Link check saved successfully!");
+  } catch (error) {
+    console.error("Error saving link check:", error);
+  }
+}
+
+// Check another link
 checkAnotherBtn.addEventListener("click", () => {
+  localStorage.removeItem("checkedURL");
   window.location.href = "link-checker.html";
 });
