@@ -1,5 +1,6 @@
 import { db, auth } from "./firebaseConfig.js";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 const resultText = document.querySelector("#resultText");
 const checkAnotherBtn = document.querySelector("#checkAnotherBtn");
@@ -19,13 +20,11 @@ if (result === "safe") {
   resultText.classList.add("text-danger");
 }
 
-// Save to Firestore
-saveLinkCheck();
-
-async function saveLinkCheck() {
+// Save to Firestore after auth state is loaded
+onAuthStateChanged(auth, async (user) => {
   try {
     await addDoc(collection(db, "linkChecks"), {
-      userID: auth.currentUser ? auth.currentUser.uid : "anonymous",
+      userID: user ? user.displayName : "anonymous",
       url: checkedURL,
       result: result,
       checkedAt: serverTimestamp(),
@@ -35,7 +34,7 @@ async function saveLinkCheck() {
   } catch (error) {
     console.error("Error saving link check:", error);
   }
-}
+});
 
 // Check another link
 checkAnotherBtn.addEventListener("click", () => {
