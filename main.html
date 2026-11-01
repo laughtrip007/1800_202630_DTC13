@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>My BCIT Project</title>
+    <meta name="comp1800 template" content="My 1800 App" />
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module" src="/src/site-navbar.js"></script>
+  </head>
+  <body class="bg-body-tertiary">
+    <!------------------------------>
+    <!-- Your HTML Layout go here -->
+    <!------------------------------>
+    <!-- Stuff for body goes here -->
+    <site-navbar></site-navbar>
+
+    <!-- Main Content Start -->
+    <main class="container py-4" style="max-width: 420px">
+      <!-- App Heading -->
+      <section class="mb-4 text-center">
+        <div class="d-flex justify-content-center">
+          <img
+            src="images/SafeLink-Logo.png"
+            alt="SafeLink logo"
+            width="360"
+            class="img-fluid"
+          />
+        </div>
+        <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
+
+        <h1 class="h4 fw-bold mt-3">
+          Welcome, <span id="name-goes-here">!</span>
+        </h1>
+      </section>
+
+      <!-- Check a Link -->
+      <a href="link-checker.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">🔗</div>
+            <h2 class="h4 fw-bold">Check a Link</h2>
+
+            <p class="text-body-secondary mb-0">
+              Check if a link may be suspicious.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Scam Reports -->
+      <a href="scam_reports.html" class="text-decoration-none text-dark">
+        <div class="card feature-card border-0 shadow-sm mb-3">
+          <div class="card-body text-center py-4">
+            <div class="fs-1 mb-2">⚠️</div>
+            <h2 class="h4 fw-bold">Scam Reports</h2>
+            <p class="text-body-secondary mb-0">
+              View reports and learn about common scams.
+            </p>
+          </div>
+        </div>
+      </a>
+
+      <!-- Future Feature -->
+      <div class="card border-0 shadow-sm mb-4 opacity-75">
+        <div class="card-body text-center py-4">
+          <div class="fs-1 mb-2">✉️</div>
+
+          <h2 class="h4 fw-bold">Verify a Message</h2>
+
+          <p class="text-body-secondary mb-0">Coming soon</p>
+        </div>
+      </div>
+    </main>
+    <!-- Main Content End -->
+
+    <!-- Navbar Start -->
+    <nav
+      class="navbar fixed-bottom bg-success bottom-nav"
+      aria-label="Bottom navigation"
+    >
+      <div class="container-fluid justify-content-around text-center">
+        <a class="nav-link text-white" href="main.html">
+          <div class="text-2xl">⌂</div>
+          <small>Home</small>
+        </a>
+        <a class="nav-link text-white" href="#">
+          <div class="text-2xl">?</div>
+          <small>Help</small>
+        </a>
+        <a class="nav-link text-white" href="#">
+          <div class="text-2xl">⌕</div>
+          <small>Search</small>
+        </a>
+      </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!---------------------------------------------->
+    <!-- Your own JavaScript functions go here    -->
+    <!---------------------------------------------->
+    <!-- Link to scripts of your own -->
+    <script type="module" src="/src/app.js"></script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
