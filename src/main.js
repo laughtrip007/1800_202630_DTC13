@@ -1,19 +1,20 @@
 // Import the file that has the authentication helper function we want to use.
 // The function we want to use is called "onAuthReady" which returns the login state
 import { onAuthReady } from "/src/authentication.js";
+import { db } from "/src/firebaseConfig.js";
+import { doc, getDoc } from "firebase/firestore";
 
 function showName() {
-  // Pass a CALLBACK function to run when Firebase finishes checking login status
-  onAuthReady(function (user) {
-    // Firebase passes the user object (or null)
-    if (user) {
-      // User is logged in
-      const name = user.displayName || user.email; // Use email if name is missing
-      document.getElementById("name-goes-here").textContent = name + "!";
-    } else {
-      // User is NOT logged in
-      location.href = "index.html"; // Redirect to login page
+  onAuthReady(async function (user) {
+    if (!user) {
+      location.href = "index.html";
+      return;
     }
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const name = userDoc.exists()
+      ? userDoc.data().name
+      : user.displayName || user.email;
+    document.getElementById("name-goes-here").textContent = name + "!";
   });
 }
 

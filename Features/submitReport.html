@@ -13,7 +13,6 @@
       crossorigin="anonymous"
     />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script type="module" src="/src/site-navbar.js"></script>
   </head>
   <body class="bg-body-tertiary">
     <!------------------------------>
@@ -22,41 +21,34 @@
     <!-- Stuff for body goes here -->
     <site-navbar></site-navbar>
 
-    <!-- Main Content Start -->
-    <main class="container py-4" style="max-width: 420px">
-
-      <!-- App Heading -->
-      <section class="mb-4 text-center">
-        <div class="d-flex justify-content-center">
-          <img
-            src="images/SafeLink-Logo.png"
-            alt="SafeLink logo"
-            width="360"
-            class="img-fluid"
-          />
-        </div>
-        <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
-      </section>
-
-      <!-- CTA Section Start -->
-      <section class="text-center bg-white border rounded-3 shadow-sm p-4 mb-3">
-        <h2 class="h4 fw-bold">Get More from SafeLink</h2>
-        <p class="text-body-secondary mb-3">
-          Sign in or create an account to access more SafeLink features.
-        </p>
-        <div class="d-grid gap-2">
-          <button
-            type="button"
-            class="btn btn-success"
-            onclick="window.location.href = 'login.html'"
-          >
-            Login / Sign Up
-          </button>
-        </div>
-      </section>
-      <!-- CTA Section End -->
-    </main>
-    <!-- Main Content End -->
+    <div class="container py-4">
+      <!-- Back Button Start -->
+      <a
+        href="scam_reports.html"
+        class="btn btn-outline-success btn-lg d-inline-flex align-items-center gap-2 mb-4"
+      >
+        <span class="fs-4">←</span>
+        <span>Go Back</span>
+      </a>
+      <!-- Back Button End -->
+      <!-- Form Start -->
+      <main class="container py-4" style="max-width: 560px;">
+        <h1>Submit a scam report.</h1>
+      
+        <form id="addHikeForm" novalidate>
+          
+          <div class="mb-3">
+            <label for="cityInput" class="form-label">Whats wrong?</label>
+            <input type="text" id="queryInput" class="form-control" placeholder="e.g. I lost all my money!" required />
+          </div>
+          <div class="mb-3">
+            <label for="detailsInput" class="form-label">Explain what you found.</label>
+            <textarea id="detailsInput" class="form-control" rows="3" placeholder="..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Enter report</button>
+        </form>
+      </main>
+    <!-- Form End -->
 
     <!-- Navbar Start -->
     <nav
@@ -64,7 +56,7 @@
       aria-label="Bottom navigation"
     >
       <div class="container-fluid justify-content-around text-center">
-        <a class="nav-link text-white" href="main.html">
+        <a class="nav-link text-white" href="index.html">
           <div class="text-2xl">⌂</div>
           <small>Home</small>
         </a>
@@ -81,11 +73,11 @@
     <!-- Navbar End -->
 
     <!---------------------------------------------->
-    <!-- Your own JavaScript functions go here    -->
+    <!-- Your own JavaScript functions go here -->
     <!---------------------------------------------->
     <!-- Link to scripts of your own -->
     <script type="module" src="/src/app.js"></script>
-    <script type="module" src="/src/firebaseConfig.js"></script>
-    <script type="module" src="/src/authentication.js"></script>
+    <script type="module" src="/src/site-navbar.js"></script>
+    <script type="module" src="/src/addHike.js"></script>
   </body>
 </html>

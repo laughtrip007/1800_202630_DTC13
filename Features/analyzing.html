@@ -24,68 +24,43 @@
     <site-navbar></site-navbar>
 
     <div class="container py-4">
-      <!-- Back Button Start -->
-      <a
-        href="link-checker.html"
-        class="btn btn-outline-success btn-lg d-inline-flex align-items-center gap-2 mb-4"
-      >
-        <span class="fs-4">←</span>
-        <span>Go Back</span>
-      </a>
-      <!-- Back Button End -->
-
-      <!-- Header Card -->
-      <div class="card border-0 shadow-sm mb-4">
+      <div class="card border-0 shadow-sm">
         <div class="card-body text-center">
-          <h2 class="fw-bold">Check a Link</h2>
+          <h2 class="fw-bold mb-3">Check a Link</h2>
 
-          <div class="display-4 mb-2">✅</div>
+          <div class="display-4 mb-3">✅</div>
 
           <p class="text-muted">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum
-            dolor sit amet consectetur adipisicing elit.
+            Lorem ipsum dolor sit amet consectetur adipisicing elit.
           </p>
         </div>
       </div>
 
-      <!-- Result Card -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body text-center">
-          <h2 class="fw-bold mb-3">This Link Is...</h2>
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body text-center py-5">
+          <div
+            class="spinner-border text-success"
+            style="width: 5rem; height: 5rem"
+            role="status"
+          ></div>
 
-          <h1 id="resultText" class="display-4 fw-bold">Checking...</h1>
-
-          <div class="display-1 mb-3">🛡️</div>
-
-          <p class="text-muted">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum
-            dolor sit amet consectetur adipisicing elit. Lorem ipsum dolor sit
-            amet consectetur adipisicing elit.
-          </p>
+          <h2 class="fw-bold mt-4">Analyzing Link...</h2>
         </div>
-      </div>
-
-      <!-- Buttons -->
-      <div class="d-grid">
-        <button id="checkAnotherBtn" class="btn btn-success btn-lg">
-          Check Another Link
-        </button>
       </div>
     </div>
+
+    <script>
+      setTimeout(() => {
+        window.location.href = "link-result.html";
+      }, 2500);
+    </script>
+
     <!-- Navbar Start -->
     <nav class="navbar fixed-bottom bg-success bottom-nav">
       <div class="container-fluid justify-content-around text-center">
-        <a class="nav-link text-white" href="index.html">
+        <a class="nav-link text-white" href="main.html">
           <div class="text-2xl">⌂</div>
           <small>Home</small>
-        </a>
-        <a class="nav-link text-white" href="#">
-          <div class="text-2xl">?</div>
-          <small>Help</small>
-        </a>
-        <a class="nav-link text-white" href="#">
-          <div class="text-2xl">⌕</div>
-          <small>Search</small>
         </a>
       </div>
     </nav>
@@ -98,6 +73,5 @@
     <script type="module" src="/src/firebaseConfig.js"></script>
     <script type="module" src="/src/authentication.js"></script>
     <script type="module" src="/src/loginSignup.js"></script>
-    <script type="module" src="/src/linkResult.js"></script>
   </body>
 </html>
