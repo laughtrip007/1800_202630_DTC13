@@ -24,7 +24,6 @@
     <site-navbar></site-navbar>
 
     <div class="container py-4">
-
       <!-- Back Button Start -->
       <a
         href="index.html"
@@ -34,7 +33,7 @@
         <span>Go Back</span>
       </a>
       <!-- Back Button End -->
-      
+
       <div
         class="card border-0 shadow-sm mb-4 text-center bg-success text-white"
       >
@@ -49,8 +48,8 @@
           <div class="display-4 mb-2">✅</div>
 
           <p class="text-muted">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Lorem ipsum
-            dolor sit amet consectetur adipisicing elit.
+            Not sure if a link can be trusted? Paste it below and let SafeLink
+            help you make a safer decision.
           </p>
         </div>
       </div>
@@ -74,6 +73,36 @@
         <button id="analyzeBtn" class="btn btn-success btn-lg">
           Analyze Link
         </button>
+      </div>
+    </div>
+
+    <!-- Link Check Counter -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-10">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body text-center">
+            <h4 class="fw-bold">Total Links Checked</h4>
+
+            <h1 id="linkCheckCounter" class="display-5 text-success fw-bold">
+              0
+            </h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Link History -->
+    <div class="row justify-content-center">
+      <div class="col-10">
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-body">
+            <h4 class="fw-bold text-center mb-3">Recent Link Checks</h4>
+
+            <div id="linkHistory">
+              <p class="text-muted text-center">No link history yet.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -104,5 +133,6 @@
     <script type="module" src="/src/authentication.js"></script>
     <script type="module" src="/src/loginSignup.js"></script>
     <script type="module" src="/src/linkChecker.js"></script>
+    <script type="module" src="/src/linkCounter.js"></script>
   </body>
 </html>
