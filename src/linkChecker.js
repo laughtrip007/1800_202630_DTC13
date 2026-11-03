@@ -8,10 +8,26 @@ analyzeBtn.addEventListener("click", () => {
     return;
   }
 
+  let formattedLink = link;
+
+  // Add https:// if missing
+  if (
+    !formattedLink.startsWith("http://") &&
+    !formattedLink.startsWith("https://")
+  ) {
+    formattedLink = "https://" + formattedLink;
+  }
+
+  // Validate URL
+  try {
+    new URL(formattedLink);
+  } catch {
+    alert("Please enter a valid website address (example: google.com)");
+    return;
+  }
+
   // Save the link for the results page
   localStorage.setItem("checkedURL", link);
-
-  console.log("Checking link:", link);
 
   window.location.href = "analyzing.html";
 });

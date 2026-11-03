@@ -1,12 +1,5 @@
 import { db, auth } from "./firebaseConfig.js";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-} from "firebase/firestore";
+import { collection, getDocs, query, where,} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 const counterElement = document.querySelector("#linkCheckCounter");
@@ -18,7 +11,6 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-     console.log("Current User:", user.uid);
   try {
     // Get current user's link checks
     const q = query(
@@ -28,8 +20,6 @@ onAuthStateChanged(auth, async (user) => {
 
       const snapshot = await getDocs(q);
       
-      console.log("Documents Found:", snapshot.size);
-
     // Counter
     counterElement.textContent = snapshot.size;
 

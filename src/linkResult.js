@@ -11,13 +11,20 @@ const checkedURL = localStorage.getItem("checkedURL");
 // Generate placeholder result
 const result = Math.random() > 0.5 ? "safe" : "unsafe";
 
-// Display result
+const resultDescription = document.querySelector("#resultDescription");
+
 if (result === "safe") {
   resultText.textContent = "SAFE!";
   resultText.classList.add("text-success");
+
+  resultDescription.textContent =
+    "This link appears to be safe based on our current analysis. While no system can guarantee complete safety, there are no obvious signs of phishing, scams, or malicious activity associated with this website.";
 } else {
   resultText.textContent = "UNSAFE!";
   resultText.classList.add("text-danger");
+
+  resultDescription.textContent =
+    "This link may be unsafe or potentially harmful. It could be associated with phishing attempts, scams, or other suspicious activity. We recommend avoiding this website and not entering any personal information.";
 }
 
 // Save to Firestore after auth state is loaded
@@ -31,8 +38,8 @@ onAuthStateChanged(auth, async (user) => {
       checkedAt: serverTimestamp(),
     });
 
-    console.log("Link check saved successfully!");
   } catch (error) {
+    alert("Could not save link check. Please try again.");
     console.error("Error saving link check:", error);
   }
 });
