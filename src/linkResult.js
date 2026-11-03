@@ -24,7 +24,8 @@ if (result === "safe") {
 onAuthStateChanged(auth, async (user) => {
   try {
     await addDoc(collection(db, "linkChecks"), {
-      userID: user ? user.displayName : "anonymous",
+      userID: user ? user.uid : "anonymous",
+      userName: user ? user.displayName : "anonymous",
       url: checkedURL,
       result: result,
       checkedAt: serverTimestamp(),
