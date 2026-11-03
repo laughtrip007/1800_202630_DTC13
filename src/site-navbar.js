@@ -12,7 +12,7 @@ class SiteNavbar extends HTMLElement {
             <!-- Navbar: single source of truth -->
             <nav class="navbar navbar-expand-lg navbar-light bg-success">
                 <div class="container-fluid">
-                    <a class="navbar-brand" id="brandHome" href="/">
+                    <a class="navbar-brand" id="brandHome" href="index.html">
                         <img src="/images/SafeLink-Logo.png" alt="SafeLink logo" style="width: auto; height: 36px; max-width: none; display: inline-block;">
                         SafeLink
                     </a>
@@ -21,16 +21,7 @@ class SiteNavbar extends HTMLElement {
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav me-auto">
-                            <li class="nav-item">
-                                <a class="nav-link" id="homeLink" href="/">Home</a>
-                            </li>
-                        </ul>
-                        <div class="d-flex align-items-center gap-2 ms-lg-2" id="rightControls">
-                            <form class="d-flex align-items-center gap-2 my-2 my-lg-0" id="navSearch" role="search">
-                                <input class="form-control d-none d-sm-block w-auto" type="search" placeholder="Search" aria-label="Search">
-                                <button class="btn btn-outline-light d-none d-sm-inline-block" type="submit">Search</button>
-                            </form>
+                        <div class="d-flex align-items-center gap-2 ms-auto" id="rightControls">
                             <div id="authControls" class="auth-controls d-flex align-items-center gap-2 my-2 my-lg-0">
                                 <!-- populated by JS -->
                             </div>
@@ -66,7 +57,7 @@ class SiteNavbar extends HTMLElement {
         signOutBtn.addEventListener("click", logoutUser); // Callback: runs when Log out is clicked
       } else {
         // User is NOT logged in, and gets redirected to login page if user clicks the login button
-        authControls.innerHTML = `<a class="btn btn-outline-light" id="loginBtn" href="/login.html" style="min-width: 80px;">Log in</a>`;
+        authControls.innerHTML = `<a class="btn btn-outline-light" id="loginBtn" href="login.html" style="min-width: 80px;">Log in</a>`;
       }
     });
   }
