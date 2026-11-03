@@ -12,7 +12,7 @@ class SiteNavbar extends HTMLElement {
             <!-- Navbar: single source of truth -->
             <nav class="navbar navbar-expand-lg navbar-light bg-success">
                 <div class="container-fluid">
-                    <a class="navbar-brand" href="/">
+                    <a class="navbar-brand" id="brandHome" href="/">
                         <img src="/images/SafeLink-Logo.png" alt="SafeLink logo" style="width: auto; height: 36px; max-width: none; display: inline-block;">
                         SafeLink
                     </a>
@@ -23,7 +23,7 @@ class SiteNavbar extends HTMLElement {
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav me-auto">
                             <li class="nav-item">
-                                <a class="nav-link" href="/">Home</a>
+                                <a class="nav-link" id="homeLink" href="/">Home</a>
                             </li>
                         </ul>
                         <div class="d-flex align-items-center gap-2 ms-lg-2" id="rightControls">
@@ -55,6 +55,8 @@ class SiteNavbar extends HTMLElement {
     // Pass a callback that runs when Firebase reports the login status
     onAuthReady(function (user) {
       // Receives the user object (or null)
+      const brandHome = document.querySelector("#brandHome");
+      const homeLink = document.querySelector("#homeLink");
 
       if (user) {
         // User is logged in
