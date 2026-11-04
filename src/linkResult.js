@@ -22,18 +22,16 @@ const RESULTS = {
 function init() {
   const checkedURL = localStorage.getItem("checkedURL");
 
-  // Opened directly without checking a link first
   if (!checkedURL) {
     location.replace("link-checker.html");
     return;
   }
 
-  // Reuse the stored result on refresh so the result doesn't change
-  // and the same check isn't saved to Firestore twice.
+  // keep the same result on refresh
   let result = localStorage.getItem("checkedResult");
   const isNewCheck = !result;
   if (isNewCheck) {
-    // TODO: replace this placeholder with a real link analysis
+    // TODO: real link check
     result = Math.random() > 0.5 ? "safe" : "unsafe";
     localStorage.setItem("checkedResult", result);
   }
@@ -47,10 +45,10 @@ function init() {
   document.querySelector("#resultDescription").textContent = info.description;
 
   if (isNewCheck) {
-    // onAuthStateChanged can fire more than once; only save on the first call
+    // only save once
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       unsubscribe();
-      if (!user) return; // app.js redirects logged-out users to login.html
+      if (!user) return;
       try {
         await addDoc(collection(db, "linkChecks"), {
           userID: user.uid,

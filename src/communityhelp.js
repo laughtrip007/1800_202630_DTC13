@@ -20,7 +20,7 @@ onAuthReady((user) => {
   currentUser = user;
 });
 
-// Build a post card with textContent so user input is never treated as HTML (prevents XSS)
+// use textContent so posts can't inject html
 function createPostCard(post) {
   const card = document.createElement("div");
   card.className = "card border-0 shadow-sm mb-3";
@@ -42,7 +42,6 @@ function createPostCard(post) {
   return card;
 }
 
-// Read all questions from Firestore and show them
 async function showPosts() {
   try {
     const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
@@ -65,7 +64,6 @@ async function showPosts() {
   }
 }
 
-// Save a new question to Firestore
 postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const question = questionInput.value.trim();
