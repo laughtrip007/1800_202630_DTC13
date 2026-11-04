@@ -9,6 +9,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
+const postForm = document.querySelector("#postForm");
 const postBtn = document.querySelector("#postBtn");
 const questionInput = document.querySelector("#questionInput");
 const postList = document.querySelector("#postList");
@@ -19,29 +20,54 @@ onAuthReady((user) => {
   currentUser = user;
 });
 
+// Build a post card with textContent so user input is never treated as HTML (prevents XSS)
+function createPostCard(post) {
+  const card = document.createElement("div");
+  card.className = "card border-0 shadow-sm mb-3";
+
+  const body = document.createElement("div");
+  body.className = "card-body";
+
+  const author = document.createElement("h3");
+  author.className = "h6 fw-bold card-title";
+  author.textContent = post.userID || "Anonymous";
+
+  const text = document.createElement("p");
+  text.className = "card-text mb-0";
+  text.style.whiteSpace = "pre-wrap";
+  text.textContent = post.question;
+
+  body.append(author, text);
+  card.appendChild(body);
+  return card;
+}
+
 // Read all questions from Firestore and show them
 async function showPosts() {
-  postList.innerHTML = "";
+  try {
+    const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
 
-  const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
+    postList.innerHTML = "";
 
-  snapshot.forEach((doc) => {
-    const post = doc.data();
+    if (snapshot.empty) {
+      const p = document.createElement("p");
+      p.className = "text-body-secondary text-center";
+      p.textContent = "No questions yet. Be the first to ask!";
+      postList.appendChild(p);
+      return;
+    }
 
-    postList.innerHTML += `
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-          <h4 class="card-title">${post.userID}</h4>
-          <p class="card-text">${post.question}</p>
-        </div>
-      </div>
-    `;
-  });
+    snapshot.forEach((doc) => postList.appendChild(createPostCard(doc.data())));
+  } catch (error) {
+    console.error("Error loading posts:", error);
+    postList.innerHTML = `<p class="text-danger text-center">Could not load questions.</p>`;
+  }
 }
 
 // Save a new question to Firestore
-postBtn.addEventListener("click", async () => {
+postForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
   const question = questionInput.value.trim();
 
   if (currentUser === null) {
@@ -54,14 +80,21 @@ postBtn.addEventListener("click", async () => {
     return;
   }
 
-  await addDoc(collection(db, "helpPosts"), {
-    question: question,
-    userID: currentUser.displayName || currentUser.email,
-    createdAt: serverTimestamp(),
-  });
-
-  questionInput.value = "";
-  showPosts();
+  postBtn.disabled = true;
+  try {
+    await addDoc(collection(db, "helpPosts"), {
+      question: question,
+      userID: currentUser.displayName || currentUser.email,
+      createdAt: serverTimestamp(),
+    });
+    questionInput.value = "";
+    await showPosts();
+  } catch (error) {
+    console.error("Error posting question:", error);
+    alert("Could not post your question. Please try again.");
+  } finally {
+    postBtn.disabled = false;
+  }
 });
 
 showPosts();
