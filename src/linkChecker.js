@@ -1,17 +1,36 @@
-const analyzeBtn = document.querySelector("#analyzeBtn");
+const linkForm = document.querySelector("#linkForm");
+const linkInput = document.querySelector("#linkInput");
 
-analyzeBtn.addEventListener("click", () => {
-  const link = document.querySelector("#linkInput").value.trim();
+linkForm.addEventListener("submit", (e) => {
+  e.preventDefault();
 
-  if (!link) {
+  let input = linkInput.value.trim();
+
+  if (!input) {
     alert("Please enter a link.");
     return;
   }
 
-  // Save the link for the results page
-  localStorage.setItem("checkedURL", link);
+  // Add https:// if missing
+  if (!/^https?:\/\//i.test(input)) {
+    input = "https://" + input;
+  }
 
-  console.log("Checking link:", link);
+  // needs a real domain like google.com
+  let url;
+  try {
+    url = new URL(input);
+  } catch {
+    url = null;
+  }
+
+  if (!url || !url.hostname.includes(".")) {
+    alert("Please enter a valid website address (example: google.com)");
+    return;
+  }
+
+  localStorage.setItem("checkedURL", url.href);
+  localStorage.removeItem("checkedResult");
 
   window.location.href = "analyzing.html";
 });
