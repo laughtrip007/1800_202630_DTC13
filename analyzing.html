@@ -34,7 +34,6 @@
         location.replace("link-checker.html");
       } else {
         document.getElementById("analyzingUrl").textContent = url;
-        // replace() so the browser Back button skips this loading page
         setTimeout(() => location.replace("link-result.html"), 2500);
       }
     </script>

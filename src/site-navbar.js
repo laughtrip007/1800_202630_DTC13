@@ -11,7 +11,7 @@ class SiteNavbar extends HTMLElement {
             <span class="fw-semibold">SafeLink</span>
           </a>
           <div id="authControls">
-            <!-- Invisible placeholder prevents layout shift while Firebase checks login status -->
+            <!-- placeholder so the navbar doesn't jump -->
             <span class="btn btn-outline-light invisible auth-btn">Log out</span>
           </div>
         </div>

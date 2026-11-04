@@ -14,7 +14,7 @@ function showMessage(text) {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return; // app.js redirects logged-out users to login.html
+  if (!user) return;
 
   try {
     const q = query(collection(db, "linkChecks"), where("userID", "==", user.uid));
@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    // Sort newest first (checkedAt can be null for a write that is still pending)
+    // newest first
     const checks = snapshot.docs
       .map((doc) => doc.data())
       .sort((a, b) => (b.checkedAt?.toMillis?.() ?? 0) - (a.checkedAt?.toMillis?.() ?? 0));

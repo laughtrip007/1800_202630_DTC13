@@ -1,4 +1,3 @@
-// Bottom navigation shared by every logged-in page. The tab for the current section is highlighted.
 const tabs = [
   { href: "main.html", icon: "bi-house-door", activeIcon: "bi-house-door-fill", label: "Home", pages: ["main.html"] },
   {

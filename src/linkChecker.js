@@ -16,7 +16,7 @@ linkForm.addEventListener("submit", (e) => {
     input = "https://" + input;
   }
 
-  // Validate URL: must be http(s) and have a real-looking domain (e.g. "google.com", not "abc")
+  // needs a real domain like google.com
   let url;
   try {
     url = new URL(input);
@@ -29,7 +29,6 @@ linkForm.addEventListener("submit", (e) => {
     return;
   }
 
-  // Save the normalized link for the results page, and clear any previous result
   localStorage.setItem("checkedURL", url.href);
   localStorage.removeItem("checkedResult");
 

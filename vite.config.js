@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
-// Every HTML page must be listed here, otherwise `npm run build` only outputs index.html.
+// add new pages here so they get built
 const pages = [
   "index",
   "login",
