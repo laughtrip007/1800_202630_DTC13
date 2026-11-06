@@ -1,17 +1,24 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
-
-//--------------------------------------------------------------
-// If you have custom global styles, import them as well:
-//--------------------------------------------------------------
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "/styles/style.css";
+import "/src/site-navbar.js";
+import "/src/bottom-nav.js";
+import { onAuthReady } from "/src/authentication.js";
 
-//--------------------------------------------------------------
-// Custom global JS code (shared with all pages)can go here.
-//--------------------------------------------------------------
+// login check: logged out -> login page, logged in -> home
+const page = location.pathname.split("/").pop() || "index.html";
+const isLoginPage = page === "login.html";
 
-// This is an example function. Replace it with your own logic.
-function sayHello() {
-  // TODO: implement your logic here
-}
-document.addEventListener("DOMContentLoaded", sayHello);
+// only check once, signup does its own redirect after saving the user
+const unsubscribe = onAuthReady((user) => {
+  unsubscribe();
+
+  if (!user && !isLoginPage) {
+    location.replace("login.html");
+  } else if (user && (isLoginPage || page === "index.html")) {
+    location.replace("main.html");
+  } else {
+    document.body.hidden = false;
+  }
+});

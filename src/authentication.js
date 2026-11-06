@@ -101,7 +101,7 @@ export async function signupUser(name, email, password) {
 // -------------------------------------------------------------
 export async function logoutUser() {
   await signOut(auth);
-  window.location.href = "index.html";
+  window.location.href = "login.html";
 }
 
 // -------------------------------------------------------------
@@ -123,7 +123,7 @@ export function checkAuthState() {
   onAuthStateChanged(auth, (user) => {
     if (window.location.pathname.endsWith("main.html")) {
       if (!user) {
-        window.location.href = "index.html";
+        window.location.href = "login.html";
       }
     }
   });
