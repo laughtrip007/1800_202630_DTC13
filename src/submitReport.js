@@ -1,6 +1,6 @@
 import { db } from "./firebaseConfig.js";
 import { onAuthReady } from "./authentication.js";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 
 const form = document.getElementById("addReportForm");
 const submitBtn = document.getElementById("submitReportBtn");
@@ -27,17 +27,27 @@ async function saveReport(event) {
     return;
   }
 
-  const newReport = {
+  const uid = currentUser.uid;
+  // make the id first so the user's postedReports entry can use the same one
+  const reportRef = doc(collection(db, "scamReports"));
+  const batch = writeBatch(db);
+
+  batch.set(reportRef, {
     query: queryText,
     details: details,
-    owner: currentUser.uid,
+    ownerId: uid,
     ownerName: currentUser.displayName || currentUser.email,
-    last_updated: serverTimestamp(),
-  };
+    createdAt: serverTimestamp(),
+  });
+  batch.set(doc(db, "users", uid, "postedReports", reportRef.id), {
+    title: queryText,
+    href: "scam_query.html?id=" + reportRef.id,
+    createdAt: serverTimestamp(),
+  });
 
   submitBtn.disabled = true;
   try {
-    await addDoc(collection(db, "scamReports"), newReport);
+    await batch.commit();
     location.href = "scam_reports.html";
   } catch (error) {
     alert(`Error saving report:\n${error.code || ""}\n${error.message || error}`);

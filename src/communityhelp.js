@@ -3,11 +3,11 @@ import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/saveButton.js";
 import {
   collection,
-  addDoc,
+  getDoc,
   getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
+  writeBatch,
   deleteField,
   doc,
   query,
@@ -76,6 +76,11 @@ function formatFullTime(timestamp) {
     : "";
 }
 
+// older posts kept the author's name in userID
+function authorName(post) {
+  return post.ownerName || post.userID || "Anonymous";
+}
+
 // older posts without ownerId can't be deleted (names aren't unique)
 function isOwner(post) {
   return currentUser !== null && post.ownerId === currentUser.uid;
@@ -106,10 +111,8 @@ function readPostExtras() {
 async function loadSavedIds() {
   if (currentUser === null) return;
   try {
-    const snapshot = await getDocs(
-      collection(db, "users", currentUser.uid, "savedHelp"),
-    );
-    savedIds = new Set(snapshot.docs.map((d) => d.id));
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    savedIds = new Set(Object.keys(userDoc.data()?.savedHelp || {}));
   } catch (error) {
     console.error("Error loading saved posts:", error);
     savedIds = new Set();
@@ -121,7 +124,11 @@ async function deletePost(id, deleteBtn) {
 
   deleteBtn.disabled = true;
   try {
-    await deleteDoc(doc(db, "helpPosts", id));
+    // the post and its entry in the author's postedHelp go together
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "helpPosts", id));
+    batch.delete(doc(db, "users", currentUser.uid, "postedHelp", id));
+    await batch.commit();
   } catch (error) {
     alert(
       `Error deleting post:\n${error.code || ""}\n${error.message || error}`,
@@ -423,7 +430,7 @@ function createPostCard(post, id) {
 
   const author = document.createElement("h3");
   author.className = "h6 fw-bold card-title mb-0";
-  author.textContent = post.userID || "Anonymous";
+  author.textContent = authorName(post);
 
   const time = document.createElement("small");
   time.className = "text-body-secondary d-block mb-2";
@@ -507,21 +514,24 @@ async function toggleSave(post, saveBtn) {
     return;
   }
 
-  const savedRef = doc(db, "users", currentUser.uid, "savedHelp", post.id);
+  // saved posts are a map field on the user doc: savedHelp.<postId>
+  const userRef = doc(db, "users", currentUser.uid);
   const wasSaved = savedIds.has(post.id);
   saveBtn.disabled = true;
 
   try {
     if (wasSaved) {
-      await deleteDoc(savedRef);
+      await updateDoc(userRef, { ["savedHelp." + post.id]: deleteField() });
       savedIds.delete(post.id);
     } else {
-      await setDoc(savedRef, {
+      // merge so it also works if the user doc doesn't exist yet
+      const item = {
         title: post.question,
-        text: "Asked by " + (post.userID || "Anonymous"),
+        text: "Asked by " + authorName(post),
         href: "community_help.html#post-" + post.id,
         savedAt: serverTimestamp(),
-      });
+      };
+      await setDoc(userRef, { savedHelp: { [post.id]: item } }, { merge: true });
       savedIds.add(post.id);
     }
     setSaveLook(saveBtn, !wasSaved);
@@ -568,12 +578,22 @@ postForm.addEventListener("submit", async (e) => {
 
   postBtn.disabled = true;
   try {
-    await addDoc(collection(db, "helpPosts"), {
+    // make the id first so the user's postedHelp entry can use the same one
+    const uid = currentUser.uid;
+    const postRef = doc(collection(db, "helpPosts"));
+    const batch = writeBatch(db);
+    batch.set(postRef, {
       question: question,
-      userID: currentUser.displayName || currentUser.email,
-      ownerId: currentUser.uid,
+      ownerId: uid,
+      ownerName: currentUser.displayName || currentUser.email,
       createdAt: serverTimestamp(),
     });
+    batch.set(doc(db, "users", uid, "postedHelp", postRef.id), {
+      title: question,
+      href: "community_help.html#post-" + postRef.id,
+      createdAt: serverTimestamp(),
+    });
+    await batch.commit();
     questionInput.value = "";
     await showPosts();
   } catch (error) {

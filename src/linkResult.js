@@ -1,6 +1,13 @@
 import { db, auth } from "./firebaseConfig.js";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  writeBatch,
+  increment,
+  serverTimestamp,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { normalizeLink } from "./linkId.js";
 
 const RESULTS = {
   safe: {
@@ -65,14 +72,31 @@ function init() {
       if (!user) return;
 
       try {
-        await addDoc(collection(db, "linkChecks"), {
-          userID: user.uid,
-          userName: user.displayName,
+        const { url, linkId } = normalizeLink(checkedURL);
+        const batch = writeBatch(db);
+
+        // the user's own history
+        batch.set(doc(collection(db, "users", user.uid, "linkChecks")), {
           url: checkedURL,
+          linkId: linkId,
           result: result,
           checkedAt: serverTimestamp(),
         });
 
+        // public count for this link (created on the first check)
+        batch.set(
+          doc(db, "links", linkId),
+          {
+            url: url,
+            checkCount: increment(1),
+            results: { [result]: increment(1) },
+            lastResult: result,
+            lastCheckedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+
+        await batch.commit();
         localStorage.setItem("resultSaved", "true");
       } catch (error) {
         console.error("Error saving link check:", error);

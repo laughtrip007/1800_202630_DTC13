@@ -4,17 +4,17 @@ import { createSaveButton, setSaveLook } from "/src/saveButton.js";
 import {
   doc,
   getDoc,
-  setDoc,
-  deleteDoc,
+  updateDoc,
+  deleteField,
   collection,
   query,
-  where,
   orderBy,
   getDocs,
 } from "firebase/firestore";
 
-// saved items: users/{uid}/savedReports and users/{uid}/savedHelp
-// fields: title, text, href, savedAt
+// data layout: see FIRESTORE.md
+// saved items: savedReports / savedHelp map fields on users/{uid}
+// link checks: users/{uid}/linkChecks
 
 function formatDate(timestamp) {
   const date = timestamp?.toDate?.();
@@ -120,10 +120,9 @@ function buildSavedItem(item, onToggle) {
 
 async function loadLinkChecks(uid) {
   try {
-    const snapshot = await getDocs(query(collection(db, "linkChecks"), where("userID", "==", uid)));
-    const checks = snapshot.docs
-      .map((d) => d.data())
-      .sort((a, b) => (b.checkedAt?.toMillis?.() ?? 0) - (a.checkedAt?.toMillis?.() ?? 0));
+    const q = query(collection(db, "users", uid, "linkChecks"), orderBy("checkedAt", "desc"));
+    const snapshot = await getDocs(q);
+    const checks = snapshot.docs.map((d) => d.data());
     renderList("checks", checks, "You haven't checked any links yet.", buildCheckItem);
   } catch (error) {
     console.error("Error loading link checks:", error);
@@ -131,43 +130,35 @@ async function loadLinkChecks(uid) {
   }
 }
 
+// saved items are a map field on the user doc: { <id>: { title, text, href, savedAt } }
 // canUnsave: show a Save/Saved button on each item
-async function loadSaved(uid, subcollection, key, emptyMessage, canUnsave = false) {
-  let items = [];
+function showSaved(uid, savedMap, field, key, emptyMessage, canUnsave = false) {
+  const userRef = doc(db, "users", uid);
 
-  // unsave deletes the doc; saving again writes the original data back (same savedAt, same order)
+  // id = post/report id; data is kept so an unsave can be undone (same savedAt, same order)
+  const items = Object.entries(savedMap || {})
+    .map(([id, data]) => ({ ...data, id: id, data: data, saved: true }))
+    .sort((a, b) => (b.savedAt?.toMillis?.() ?? 0) - (a.savedAt?.toMillis?.() ?? 0));
+
   async function toggleSaved(item, saveBtn) {
-    const ref = doc(db, "users", uid, subcollection, item.id);
+    const path = field + "." + item.id;
     saveBtn.disabled = true;
     try {
-      if (item.saved) {
-        await deleteDoc(ref);
-      } else {
-        await setDoc(ref, item.data);
-      }
+      await updateDoc(userRef, { [path]: item.saved ? deleteField() : item.data });
       item.saved = !item.saved;
       setSaveLook(saveBtn, item.saved);
       document.querySelector(`#${key}Count`).textContent = items.filter((i) => i.saved).length;
     } catch (error) {
-      console.error(`Error updating ${subcollection}:`, error);
+      console.error(`Error updating ${field}:`, error);
       alert("Could not update your saved list. Please try again.");
     } finally {
       saveBtn.disabled = false;
     }
   }
 
-  try {
-    const q = query(collection(db, "users", uid, subcollection), orderBy("savedAt", "desc"));
-    const snapshot = await getDocs(q);
-    // id = post/report id; data is kept so an unsave can be undone
-    items = snapshot.docs.map((d) => ({ ...d.data(), id: d.id, data: d.data(), saved: true }));
-    renderList(key, items, emptyMessage, (item) =>
-      buildSavedItem(item, canUnsave ? toggleSaved : null),
-    );
-  } catch (error) {
-    console.error(`Error loading ${subcollection}:`, error);
-    showError(key);
-  }
+  renderList(key, items, emptyMessage, (item) =>
+    buildSavedItem(item, canUnsave ? toggleSaved : null),
+  );
 }
 
 onAuthReady(async (user) => {
@@ -178,18 +169,23 @@ onAuthReady(async (user) => {
     user.metadata.creationTime,
   ).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
 
+  loadLinkChecks(user.uid);
+
+  // one read gives the name and both saved lists
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    const name = userDoc.exists() ? userDoc.data().name : user.displayName;
-    document.querySelector("#profileName").textContent = name || "SafeLink user";
+    const data = userDoc.data() || {};
+    document.querySelector("#profileName").textContent =
+      data.name || user.displayName || "SafeLink user";
+
+    showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.");
+    showSaved(user.uid, data.savedHelp, "savedHelp", "help", "No saved help pages yet.", true);
   } catch (error) {
     console.error("Error loading profile:", error);
     document.querySelector("#profileName").textContent = user.displayName || "SafeLink user";
+    showError("reports");
+    showError("help");
   }
-
-  loadLinkChecks(user.uid);
-  loadSaved(user.uid, "savedReports", "reports", "No saved scam reports yet.");
-  loadSaved(user.uid, "savedHelp", "help", "No saved help pages yet.", true);
 });
 
 document.querySelector("#logoutBtn").addEventListener("click", logoutUser);
