@@ -16,6 +16,7 @@ const pages = [
   "link-result",
   "scam_reports",
   "scam_query",
+  "submitReport",
   "community_help",
 ];
 

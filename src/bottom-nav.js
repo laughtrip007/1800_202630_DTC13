@@ -11,6 +11,7 @@ const tabs = [
       "link-result.html",
       "scam_reports.html",
       "scam_query.html",
+      "submitReport.html",
       "community_help.html",
     ],
   },

@@ -2,36 +2,47 @@ import { db } from "./firebaseConfig.js";
 import { onAuthReady } from "./authentication.js";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
+const form = document.getElementById("addReportForm");
+const submitBtn = document.getElementById("submitReportBtn");
 
 let currentUser = null;
 
-onAuthReady(function (user) {
-    if (!user) {
-        location.href = "index.html";  
-        return;
-    }
-    currentUser = user;                 
+onAuthReady((user) => {
+  currentUser = user;
 });
 
 async function saveReport(event) {
-    event.preventDefault();
+  event.preventDefault();
 
+  const queryText = document.getElementById("queryInput").value.trim();
+  const details = document.getElementById("detailsInput").value.trim();
 
-    const newReport = {
-        query: document.getElementById("queryInput").value,
-        details: document.getElementById("detailsInput").value,
-        owner: currentUser.uid,                                      
-        ownerName: currentUser.displayName || currentUser.email,
-        last_updated: serverTimestamp()                           
-    };
+  if (currentUser === null) {
+    alert("Please log in to submit a report.");
+    return;
+  }
 
+  if (queryText === "" || details === "") {
+    alert("Please fill in both fields.");
+    return;
+  }
 
-    try {
-        await addDoc(collection(db, "scamReports"), newReport);
-        location.href = "main.html";    
-    } catch (error) {
-        alert(`Error saving report:\n${error.code || ""}\n${error.message || error}`);
-    }
+  const newReport = {
+    query: queryText,
+    details: details,
+    owner: currentUser.uid,
+    ownerName: currentUser.displayName || currentUser.email,
+    last_updated: serverTimestamp(),
+  };
+
+  submitBtn.disabled = true;
+  try {
+    await addDoc(collection(db, "scamReports"), newReport);
+    location.href = "scam_reports.html";
+  } catch (error) {
+    alert(`Error saving report:\n${error.code || ""}\n${error.message || error}`);
+    submitBtn.disabled = false;
+  }
 }
 
-document.getElementById("addReportForm").addEventListener("submit", saveReport);
+form.addEventListener("submit", saveReport);

@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 
 const postForm = document.querySelector("#postForm");
@@ -25,6 +26,7 @@ const commentBtn = document.querySelector("#commentBtn");
 const commentList = document.querySelector("#commentList");
 
 let currentUser = null;
+let posts = [];
 let ratings = [];
 let comments = [];
 let openPostId = null;
@@ -70,22 +72,20 @@ function formatFullTime(timestamp) {
     : "";
 }
 
+// older posts without ownerId can't be deleted (names aren't unique)
 function isOwner(post) {
-  if (currentUser === null) return false;
-
-  // older posts only stored the name
-  if (!post.ownerId) {
-    return post.userID === (currentUser.displayName || currentUser.email);
-  }
-
-  return post.ownerId === currentUser.uid;
+  return currentUser !== null && post.ownerId === currentUser.uid;
 }
 
 // ratings: helpRatings collection (postId, stars, userID, userName, ratedAt)
 async function loadRatings() {
   try {
     const snapshot = await getDocs(collection(db, "helpRatings"));
-    ratings = snapshot.docs.map((d) => d.data());
+    ratings = snapshot.docs.map((d) => {
+      const rating = d.data();
+      rating.id = d.id;
+      return rating;
+    });
   } catch (error) {
     console.error("Error loading ratings:", error);
     ratings = [];
@@ -113,12 +113,28 @@ async function deletePost(id, deleteBtn) {
   deleteBtn.disabled = true;
   try {
     await deleteDoc(doc(db, "helpPosts", id));
-    if (openPostId === id) closeComments();
-    showPosts();
   } catch (error) {
     alert(`Error deleting post:\n${error.code || ""}\n${error.message || error}`);
     deleteBtn.disabled = false;
+    return;
   }
+
+  // also remove the post's comments and ratings so they don't stay in Firestore
+  const postComments = comments.filter((c) => c.postId === id);
+  const postRatings = ratings.filter((r) => r.postId === id);
+  const results = await Promise.allSettled([
+    ...postComments.map((c) => deleteDoc(doc(db, "helpComments", c.id))),
+    ...postRatings.map((r) => deleteDoc(doc(db, "helpRatings", r.id))),
+  ]);
+  if (results.some((r) => r.status === "rejected")) {
+    console.error("Some comments/ratings of the deleted post could not be removed", results);
+  }
+
+  posts = posts.filter((post) => post.id !== id);
+  comments = comments.filter((c) => c.postId !== id);
+  ratings = ratings.filter((r) => r.postId !== id);
+  if (openPostId === id) closeComments();
+  renderPosts();
 }
 
 async function saveRating(postId, stars) {
@@ -129,20 +145,25 @@ async function saveRating(postId, stars) {
 
   try {
     // doc id is postId_userID so rating again replaces the old rating
-    await setDoc(doc(db, "helpRatings", postId + "_" + currentUser.uid), {
+    const ratingId = postId + "_" + currentUser.uid;
+    const rating = {
       postId: postId,
       stars: stars,
       userID: currentUser.uid,
       userName: currentUser.displayName || currentUser.email,
-      ratedAt: serverTimestamp(),
-    });
-    showPosts();
+    };
+    await setDoc(doc(db, "helpRatings", ratingId), { ...rating, ratedAt: serverTimestamp() });
+
+    ratings = ratings.filter((r) => r.id !== ratingId);
+    ratings.push({ ...rating, id: ratingId });
+    renderPosts();
   } catch (error) {
     alert(`Error saving rating:\n${error.code || ""}\n${error.message || error}`);
   }
 }
 
 function openComments(postId, post) {
+  if (postId !== openPostId) commentInput.value = "";
   openPostId = postId;
   commentQuestion.textContent = post.question;
   commentPanel.classList.remove("d-none");
@@ -169,15 +190,20 @@ async function saveComment() {
 
   commentBtn.disabled = true;
   try {
-    await addDoc(collection(db, "helpComments"), {
+    const comment = {
       postId: openPostId,
       text: text,
       userID: currentUser.uid,
       userName: currentUser.displayName || currentUser.email,
+    };
+    const ref = await addDoc(collection(db, "helpComments"), {
+      ...comment,
       createdAt: serverTimestamp(),
     });
+
+    comments.push({ ...comment, id: ref.id, createdAt: Timestamp.now() });
     commentInput.value = "";
-    await showPosts();
+    renderPosts();
     showComments();
   } catch (error) {
     alert(`Error saving comment:\n${error.code || ""}\n${error.message || error}`);
@@ -191,7 +217,8 @@ async function deleteComment(commentId) {
 
   try {
     await deleteDoc(doc(db, "helpComments", commentId));
-    await showPosts();
+    comments = comments.filter((c) => c.id !== commentId);
+    renderPosts();
     showComments();
   } catch (error) {
     alert(`Error deleting comment:\n${error.code || ""}\n${error.message || error}`);
@@ -346,25 +373,33 @@ function createPostCard(post, id) {
   return card;
 }
 
+// draws the post list from the data already loaded (no Firestore reads)
+function renderPosts() {
+  postList.innerHTML = "";
+
+  if (posts.length === 0) {
+    const p = document.createElement("p");
+    p.className = "text-body-secondary text-center";
+    p.textContent = "No questions yet. Be the first to ask!";
+    postList.appendChild(p);
+    return;
+  }
+
+  posts.forEach((post) => postList.appendChild(createPostCard(post, post.id)));
+}
+
+// loads posts, ratings and comments at the same time, then draws the list
 async function showPosts() {
   try {
     const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    const [snapshot] = await Promise.all([getDocs(q), loadRatings(), loadComments()]);
 
-    await loadRatings();
-    await loadComments();
-
-    postList.innerHTML = "";
-
-    if (snapshot.empty) {
-      const p = document.createElement("p");
-      p.className = "text-body-secondary text-center";
-      p.textContent = "No questions yet. Be the first to ask!";
-      postList.appendChild(p);
-      return;
-    }
-
-    snapshot.forEach((d) => postList.appendChild(createPostCard(d.data(), d.id)));
+    posts = snapshot.docs.map((d) => {
+      const post = d.data();
+      post.id = d.id;
+      return post;
+    });
+    renderPosts();
   } catch (error) {
     console.error("Error loading posts:", error);
     postList.innerHTML = `<p class="text-danger text-center">Could not load questions.</p>`;
