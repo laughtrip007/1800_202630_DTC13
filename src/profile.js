@@ -1,6 +1,17 @@
 import { onAuthReady, logoutUser } from "/src/authentication.js";
 import { db } from "/src/firebaseConfig.js";
-import { doc, getDoc, collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { createSaveButton, setSaveLook } from "/src/saveButton.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
 
 // saved items: users/{uid}/savedReports and users/{uid}/savedHelp
 // fields: title, text, href, savedAt
@@ -58,27 +69,51 @@ function buildCheckItem(check) {
   return row;
 }
 
-function buildSavedItem(item) {
-  const row = document.createElement(item.href ? "a" : "div");
-  row.className = "list-group-item px-0" + (item.href ? " list-group-item-action" : "");
-  if (item.href) row.href = item.href;
+// onToggle is optional: when given, the row gets a Save/Saved button
+function buildSavedItem(item, onToggle) {
+  const row = document.createElement("div");
+  row.className = "list-group-item px-0 d-flex align-items-start gap-2 position-relative";
+  if (item.href) row.classList.add("list-group-item-action");
 
-  const title = document.createElement("div");
-  title.className = "fw-semibold";
+  const body = document.createElement("div");
+  body.className = "flex-grow-1";
+  body.style.minWidth = "0";
+
+  // stretched-link makes the whole row clickable, but a button can't go inside <a>
+  const title = document.createElement(item.href ? "a" : "div");
+  title.className = "fw-semibold d-block text-reset text-decoration-none";
   title.textContent = item.title || "Untitled";
-  row.appendChild(title);
+  if (item.href) {
+    title.href = item.href;
+    title.classList.add("stretched-link");
+  }
+  body.appendChild(title);
 
   if (item.text) {
     const text = document.createElement("p");
     text.className = "small text-body-secondary mb-1 text-truncate-2";
     text.textContent = item.text;
-    row.appendChild(text);
+    body.appendChild(text);
   }
 
   const date = document.createElement("small");
   date.className = "text-body-secondary";
   date.textContent = item.savedAt ? `Saved ${formatDate(item.savedAt)}` : "";
-  row.appendChild(date);
+  body.appendChild(date);
+
+  row.appendChild(body);
+
+  if (onToggle) {
+    // same Save/Saved button as Community Help; z-2 keeps it above the stretched link
+    const saveBtn = createSaveButton(item.saved);
+    saveBtn.classList.add("flex-shrink-0", "position-relative", "z-2");
+    saveBtn.addEventListener("click", async () => {
+      await onToggle(item, saveBtn);
+      // unsaved items stay in the list (faded) so they can be saved again
+      body.classList.toggle("opacity-50", !item.saved);
+    });
+    row.appendChild(saveBtn);
+  }
 
   return row;
 }
@@ -96,11 +131,39 @@ async function loadLinkChecks(uid) {
   }
 }
 
-async function loadSaved(uid, subcollection, key, emptyMessage) {
+// canUnsave: show a Save/Saved button on each item
+async function loadSaved(uid, subcollection, key, emptyMessage, canUnsave = false) {
+  let items = [];
+
+  // unsave deletes the doc; saving again writes the original data back (same savedAt, same order)
+  async function toggleSaved(item, saveBtn) {
+    const ref = doc(db, "users", uid, subcollection, item.id);
+    saveBtn.disabled = true;
+    try {
+      if (item.saved) {
+        await deleteDoc(ref);
+      } else {
+        await setDoc(ref, item.data);
+      }
+      item.saved = !item.saved;
+      setSaveLook(saveBtn, item.saved);
+      document.querySelector(`#${key}Count`).textContent = items.filter((i) => i.saved).length;
+    } catch (error) {
+      console.error(`Error updating ${subcollection}:`, error);
+      alert("Could not update your saved list. Please try again.");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
   try {
     const q = query(collection(db, "users", uid, subcollection), orderBy("savedAt", "desc"));
     const snapshot = await getDocs(q);
-    renderList(key, snapshot.docs.map((d) => d.data()), emptyMessage, buildSavedItem);
+    // id = post/report id; data is kept so an unsave can be undone
+    items = snapshot.docs.map((d) => ({ ...d.data(), id: d.id, data: d.data(), saved: true }));
+    renderList(key, items, emptyMessage, (item) =>
+      buildSavedItem(item, canUnsave ? toggleSaved : null),
+    );
   } catch (error) {
     console.error(`Error loading ${subcollection}:`, error);
     showError(key);
@@ -126,7 +189,7 @@ onAuthReady(async (user) => {
 
   loadLinkChecks(user.uid);
   loadSaved(user.uid, "savedReports", "reports", "No saved scam reports yet.");
-  loadSaved(user.uid, "savedHelp", "help", "No saved help pages yet.");
+  loadSaved(user.uid, "savedHelp", "help", "No saved help pages yet.", true);
 });
 
 document.querySelector("#logoutBtn").addEventListener("click", logoutUser);

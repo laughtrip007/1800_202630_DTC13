@@ -16,7 +16,7 @@ linkForm.addEventListener("submit", (e) => {
     input = "https://" + input;
   }
 
-  // needs a real domain like google.com
+  // Needs a real domain like google.com
   let url;
   try {
     url = new URL(input);
@@ -29,8 +29,9 @@ linkForm.addEventListener("submit", (e) => {
     return;
   }
 
+  // Reset state from any previous check
   localStorage.setItem("checkedURL", url.href);
   localStorage.removeItem("checkedResult");
-
+  localStorage.removeItem("resultSaved");
   window.location.href = "analyzing.html";
 });
