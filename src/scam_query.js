@@ -25,6 +25,7 @@ function showReport() {
         report.ownerName || report.username || "Anonymous";
       document.getElementById("query_goes_here").textContent = report.query || "Untitled report";
       document.getElementById("message_goes_here").textContent = report.details || report.message || "";
+      document.getElementById("")
     },
     (error) => {
       console.error("failed reading the document", error);
