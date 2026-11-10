@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scam Report · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="scam_reports.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>All Reports</span>
+      </a>
+
+      <div class="card border-0 shadow-sm mb-4 page-header">
+        <div class="card-body d-flex align-items-center gap-3">
+          <img class="avatar rounded-circle" src="images/profile_icon.png" alt="" width="40" height="40" />
+          <p class="h5 mb-0"><span id="username_goes_here">Loading…</span></p>
+        </div>
+      </div>
+
+      <article class="bg-white border rounded-3 shadow-sm p-4">
+        <h1 class="h3 fw-bold"><span id="query_goes_here"></span></h1>
+        <p class="mb-0" style="white-space: pre-wrap"><span id="message_goes_here"></span></p>
+      </article>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/scam_query.js"></script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Analyzing… · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <div class="card border-0 shadow-sm mb-4 text-center page-header">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0">Link Checker</h1>
+        </div>
+      </div>
+
+      <section class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-success" style="width: 5rem; height: 5rem" role="status">
+            <span class="visually-hidden">Analyzing…</span>
+          </div>
+          <h2 class="h3 fw-bold mt-4">Analyzing Link…</h2>
+          <p id="analyzingUrl" class="text-body-secondary text-break mb-0"></p>
+        </div>
+      </section>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script>
+      const url = localStorage.getItem("checkedURL");
+      if (!url) {
+        location.replace("link-checker.html");
+      } else {
+        document.getElementById("analyzingUrl").textContent = url;
+        setTimeout(() => location.replace("link-result.html"), 2500);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scam Reports · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="features.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>All Features</span>
+      </a>
+      <a href="submitReport.html" class="btn btn-success d-inline-flex align-items-center gap-2 mb-3 float-end">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span>Submit a report</span>
+      </a>
+      <div class="card border-0 shadow-sm mb-4 text-center page-header">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0">Scam Reports</h1>
+        </div>
+      </div>
+
+      <div id="reportList">
+        <p class="text-body-secondary text-center">Loading…</p>
+      </div>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/scamReports.js"></script>
+  </body>
+</html>

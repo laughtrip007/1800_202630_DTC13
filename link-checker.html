@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Link Checker · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="features.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>All Features</span>
+      </a>
+      <div class="card border-0 shadow-sm mb-4 text-center page-header">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0">Link Checker</h1>
+        </div>
+      </div>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <p class="text-body-secondary text-center">
+            Not sure if a link can be trusted? Paste it below and let SafeLink
+            help you make a safer decision.
+          </p>
+          <form id="linkForm" novalidate>
+            <label for="linkInput" class="form-label fw-bold">Enter a link</label>
+            <input
+              id="linkInput"
+              type="url"
+              inputmode="url"
+              autocomplete="off"
+              class="form-control form-control-lg mb-3"
+              placeholder="https://example.com"
+            />
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success btn-lg">Analyze Link</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center">
+          <h2 class="h5 fw-bold">Total Links Checked</h2>
+          <p id="linkCheckCounter" class="display-5 text-success fw-bold mb-0">0</p>
+        </div>
+      </section>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="h5 fw-bold text-center mb-3">Recent Link Checks</h2>
+          <div id="linkHistory">
+            <p class="text-body-secondary text-center mb-0">Loading…</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/linkChecker.js"></script>
+    <script type="module" src="/src/linkCounter.js"></script>
+  </body>
+</html>

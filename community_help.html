@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Community Help · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="features.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>All Features</span>
+      </a>
+      <div class="card border-0 shadow-sm mb-4 text-center page-header">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0">Community Help</h1>
+        </div>
+      </div>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <form id="postForm" novalidate>
+            <label for="questionInput" class="form-label h5 fw-bold d-block text-center mb-3">
+              Ask the Community
+            </label>
+            <textarea
+              id="questionInput"
+              class="form-control form-control-lg mb-3"
+              rows="4"
+              placeholder="Not sure if something is a scam? Ask here."
+            ></textarea>
+            <div class="d-grid">
+              <button id="postBtn" type="submit" class="btn btn-success btn-lg">Post Question</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <h2 class="h4 fw-bold mb-3">Recent Questions</h2>
+      <div id="postList">
+        <p class="text-body-secondary text-center">Loading…</p>
+      </div>
+    </main>
+
+        <!-- Comment Panel Start -->
+    <aside
+      id="commentPanel"
+      class="d-none position-fixed top-0 end-0 h-100 bg-white shadow p-3 overflow-auto"
+      style="width: 360px; max-width: 100%; z-index: 1050"
+    >
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 fw-bold mb-0">Comments</h2>
+        <button id="commentClose" type="button" class="btn-close" aria-label="Close"></button>
+      </div>
+      <p id="commentQuestion" class="small text-body-secondary text-truncate mb-3"></p>
+
+      <textarea
+        id="commentInput"
+        class="form-control mb-2"
+        rows="3"
+        placeholder="Write a comment..."
+      ></textarea>
+      <div class="d-grid mb-3">
+        <button id="commentBtn" type="button" class="btn btn-success">Add Comment</button>
+      </div>
+
+      <div id="commentList"></div>
+    </aside>
+    <!-- Comment Panel End -->
+     
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/communityhelp.js"></script>
+  </body>
+</html>

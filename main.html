@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <section class="mb-4 text-center">
+        <img src="images/SafeLink-Logo.png" alt="SafeLink" width="360" class="img-fluid" />
+        <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
+        <h1 class="h4 fw-bold mt-3">Welcome, <span id="name-goes-here">!</span></h1>
+      </section>
+
+      <section class="card border-0 shadow-sm mb-4 tip-card">
+        <div class="card-body">
+          <h2 class="h5 fw-bold mb-3">
+            <i class="bi bi-lightbulb text-success me-1" aria-hidden="true"></i>
+            Safety Tip
+          </h2>
+          <p id="tipText" class="tip-text mb-0" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <div class="d-grid">
+        <a href="features.html" class="btn btn-success btn-lg">Explore Features</a>
+      </div>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

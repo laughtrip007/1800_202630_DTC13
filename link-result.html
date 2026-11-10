@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Result · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <div class="card border-0 shadow-sm mb-4 text-center page-header">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0">Link Checker</h1>
+        </div>
+      </div>
+
+      <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center">
+          <p class="text-body-secondary small mb-1">You checked</p>
+          <p id="checkedUrl" class="fw-semibold text-break"></p>
+
+          <h2 class="h5 fw-bold mb-2">This link is…</h2>
+          <i id="resultIcon" class="d-block display-1" aria-hidden="true"></i>
+          <p id="resultText" class="display-5 fw-bold mb-2">Checking…</p>
+          <p id="resultDescription" class="text-body-secondary"></p>
+          <p class="small text-body-secondary fst-italic mb-0">
+            Demo version: results are placeholders, not a real security scan.
+          </p>
+        </div>
+      </section>
+
+      <div class="d-grid">
+        <button id="checkAnotherBtn" class="btn btn-success btn-lg">Check Another Link</button>
+      </div>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/linkResult.js"></script>
+  </body>
+</html>
