@@ -61,11 +61,9 @@ async function showReports() {
   try {
     const snapshot = await getDocs(collection(db, "scamReports"));
 
-    // newest first; sorted here so reports without last_updated still show
-    const reports = snapshot.docs.sort(
-      (a, b) =>
-        (b.data().last_updated?.toMillis?.() ?? 0) - (a.data().last_updated?.toMillis?.() ?? 0),
-    );
+    // newest first; sorted here so reports without a date still show
+    const time = (d) => (d.data().createdAt ?? d.data().last_updated)?.toMillis?.() ?? 0;
+    const reports = snapshot.docs.sort((a, b) => time(b) - time(a));
 
     reportList.innerHTML = "";
 

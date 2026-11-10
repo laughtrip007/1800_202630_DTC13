@@ -1,0 +1,66 @@
+rules_version = '2';
+
+// Matches FIRESTORE.md. Paste into Firebase console > Firestore > Rules
+// only after the code using the new structure is merged.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isMe(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // in a map field, only the entry under my uid changed
+    function onlyMyEntry(field) {
+      return request.resource.data.get(field, {})
+               .diff(resource.data.get(field, {}))
+               .affectedKeys().hasOnly([request.auth.uid]);
+    }
+    // my rating is either removed or a whole number 1-5
+    function validRating() {
+      let mine = request.resource.data.get("ratings", {}).get(request.auth.uid, 0);
+      return mine == 0 || (mine is int && mine >= 1 && mine <= 5);
+    }
+
+    // profile, saved maps, linkChecks, postedReports, postedHelp: owner only
+    match /users/{uid} {
+      allow read, write: if isMe(uid);
+      match /{sub=**} {
+        allow read, write: if isMe(uid);
+      }
+    }
+
+    // public link counts: anyone can read, a check can only add 1
+    match /links/{linkId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.checkCount == 1;
+      allow update: if signedIn()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["checkCount", "results", "lastResult", "lastCheckedAt"])
+                    && request.resource.data.checkCount == resource.data.checkCount + 1;
+    }
+
+    // scam reports: author edits and deletes
+    match /scamReports/{reportId} {
+      allow read: if signedIn();
+      allow create: if isMe(request.resource.data.ownerId);
+      allow update, delete: if isMe(resource.data.ownerId);
+    }
+
+    // help posts: author deletes; anyone can rate/comment inside their own uid entry
+    match /helpPosts/{postId} {
+      allow read: if signedIn();
+      allow create: if isMe(request.resource.data.ownerId);
+      allow delete: if isMe(resource.data.ownerId);
+      allow update: if signedIn()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["ratings", "comments"])
+                    && onlyMyEntry("ratings")
+                    && onlyMyEntry("comments")
+                    && validRating();
+    }
+  }
+}

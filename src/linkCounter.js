@@ -1,5 +1,12 @@
 import { db, auth } from "./firebaseConfig.js";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  getCountFromServer,
+  query,
+  orderBy,
+  limit,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 const counterElement = document.querySelector("#linkCheckCounter");
@@ -17,26 +24,25 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   try {
-    const q = query(collection(db, "linkChecks"), where("userID", "==", user.uid));
-    const snapshot = await getDocs(q);
+    // users/{uid}/linkChecks: count all, but only read the latest 5
+    const checksRef = collection(db, "users", user.uid, "linkChecks");
+    const [countSnap, snapshot] = await Promise.all([
+      getCountFromServer(checksRef),
+      getDocs(query(checksRef, orderBy("checkedAt", "desc"), limit(5))),
+    ]);
 
-    counterElement.textContent = snapshot.size;
+    counterElement.textContent = countSnap.data().count;
 
     if (snapshot.empty) {
       showMessage("No link history yet.");
       return;
     }
 
-    // newest first
-    const checks = snapshot.docs
-      .map((doc) => doc.data())
-      .sort((a, b) => (b.checkedAt?.toMillis?.() ?? 0) - (a.checkedAt?.toMillis?.() ?? 0));
-
     historyElement.innerHTML = "";
     const list = document.createElement("ul");
     list.className = "list-unstyled mb-0";
 
-    checks.slice(0, 5).forEach((check) => {
+    snapshot.docs.map((d) => d.data()).forEach((check) => {
       const item = document.createElement("li");
       const safe = check.result === "safe";
       item.className = `${safe ? "text-success" : "text-danger"} fw-semibold mb-2 text-break d-flex gap-2`;
