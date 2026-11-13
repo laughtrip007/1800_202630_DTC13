@@ -1,5 +1,6 @@
 import { db } from "./firebaseConfig.js";
 import { doc, onSnapshot } from "firebase/firestore";
+import { avatarSrc } from "./avatar.js";
 
 function showReport() {
   const id = new URLSearchParams(location.search).get("id");
@@ -25,7 +26,7 @@ function showReport() {
         report.ownerName || report.username || "Anonymous";
       document.getElementById("query_goes_here").textContent = report.query || "Untitled report";
       document.getElementById("message_goes_here").textContent = report.details || report.message || "";
-      document.getElementById("")
+      document.getElementById("ownerAvatar").src = avatarSrc(report.ownerAvatar);
     },
     (error) => {
       console.error("failed reading the document", error);

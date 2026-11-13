@@ -12,7 +12,10 @@
     <main class="container page py-4">
       <div class="card border-0 shadow-sm mb-4 page-header">
         <div class="card-body d-flex align-items-center gap-3">
-          <img class="rounded-circle bg-white" src="images/profile_icon.png" alt="" width="56" height="56" />
+          <button id="avatarBtn" type="button" class="avatar-edit" aria-label="Change profile picture">
+            <img id="profileAvatar" class="rounded-circle bg-white" src="images/default-avatar.svg" alt="" width="64" height="64" />
+            <span class="avatar-edit-badge" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
+          </button>
           <div class="text-break">
             <h1 id="profileName" class="h4 fw-bold mb-0">Loading…</h1>
             <p id="profileEmail" class="mb-0 opacity-75"></p>
@@ -73,6 +76,41 @@
         <button id="logoutBtn" type="button" class="btn btn-outline-danger btn-lg">Log Out</button>
       </div>
     </main>
+
+    <!-- Profile picture picker (src/avatarPicker.js) -->
+    <div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="avatarModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-0 pb-0">
+            <h2 id="avatarModalTitle" class="modal-title h5 fw-bold">Choose your avatar</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="d-flex flex-column align-items-center gap-2 mb-3">
+              <img id="presetPreview" class="rounded-circle shadow-sm" alt="" width="96" height="96" />
+              <button id="avatarShuffle" type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1">
+                <i class="bi bi-shuffle" aria-hidden="true"></i>
+                <span>Surprise me</span>
+              </button>
+            </div>
+
+            <p class="small fw-semibold mb-2">Shape</p>
+            <div id="shapeOptions" class="d-flex flex-wrap gap-1 mb-3" role="group" aria-label="Shape"></div>
+            <p class="small fw-semibold mb-2">Color</p>
+            <div id="colorOptions" class="d-flex flex-wrap gap-1" role="group" aria-label="Color"></div>
+
+            <p id="avatarError" class="text-danger small mt-3 mb-0" role="alert" hidden></p>
+          </div>
+
+          <div class="modal-footer border-0 pt-0">
+            <button id="avatarRemove" type="button" class="btn btn-link text-danger px-0 me-auto" hidden>Use default</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="avatarSave" type="button" class="btn btn-success">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <bottom-nav></bottom-nav>
     <script type="module" src="/src/profile.js"></script>
