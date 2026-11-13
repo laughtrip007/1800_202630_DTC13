@@ -13,7 +13,7 @@ Developed for the COMP 1800 course at BCIT, this project applies User-Centred De
 - **Check a Link**: paste a URL and get a safe / unsafe result, using the Google Safe Browsing API
 - **Scam Reports**: browse reports from other users, submit your own, and save the ones you want to keep
 - **Community Help**: ask a question, comment, rate posts from 1 to 5 stars, and save useful posts
-- **Profile**: see your link check history, saved reports and saved help posts
+- **Profile**: pick an avatar (shape + color), and see your link check history, saved reports and saved help posts
 - **Safety tips** on the home page that change automatically
 - Sign-in required: every feature is only available after logging in
 - Responsive design for desktop and mobile

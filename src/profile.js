@@ -1,6 +1,8 @@
 import { onAuthReady, logoutUser } from "/src/authentication.js";
 import { db } from "/src/firebaseConfig.js";
 import { createSaveButton, setSaveLook } from "/src/saveButton.js";
+import { avatarSrc, avatarCopy } from "/src/avatar.js";
+import { createAvatarPicker } from "/src/avatarPicker.js";
 import {
   doc,
   getDoc,
@@ -161,6 +163,21 @@ function showSaved(uid, savedMap, field, key, emptyMessage, canUnsave = false) {
   );
 }
 
+// profile picture: the avatar field on users/{uid}, changed through the picker modal
+function setUpAvatar(uid, initialAvatar) {
+  const avatarImg = document.querySelector("#profileAvatar");
+  let avatar = null;
+
+  function show(newAvatar) {
+    avatar = newAvatar;
+    avatarImg.src = avatarSrc(avatar);
+  }
+
+  const picker = createAvatarPicker({ uid, onSaved: show });
+  document.querySelector("#avatarBtn").addEventListener("click", () => picker.open(avatar));
+  show(initialAvatar);
+}
+
 onAuthReady(async (user) => {
   if (!user) return;
 
@@ -171,18 +188,20 @@ onAuthReady(async (user) => {
 
   loadLinkChecks(user.uid);
 
-  // one read gives the name and both saved lists
+  // one read gives the name, the avatar and both saved lists
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const data = userDoc.data() || {};
     document.querySelector("#profileName").textContent =
       data.name || user.displayName || "SafeLink user";
+    setUpAvatar(user.uid, avatarCopy(data.avatar));
 
     showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.");
     showSaved(user.uid, data.savedHelp, "savedHelp", "help", "No saved help pages yet.", true);
   } catch (error) {
     console.error("Error loading profile:", error);
     document.querySelector("#profileName").textContent = user.displayName || "SafeLink user";
+    setUpAvatar(user.uid, null);
     showError("reports");
     showError("help");
   }

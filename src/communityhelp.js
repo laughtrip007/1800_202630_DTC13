@@ -1,6 +1,7 @@
 import { db } from "/src/firebaseConfig.js";
 import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/saveButton.js";
+import { avatarSrc, avatarCopy } from "/src/avatar.js";
 import {
   collection,
   getDoc,
@@ -34,6 +35,7 @@ let ratings = [];
 let comments = [];
 let openPostId = null;
 let savedIds = new Set();
+let myAvatar = null; // copied into my new posts and comments
 
 onAuthReady((user) => {
   currentUser = user;
@@ -107,16 +109,28 @@ function readPostExtras() {
   });
 }
 
-// saved posts: users/{uid}/savedHelp, doc id = post id
-async function loadSavedIds() {
+// from my users/{uid} doc: which posts I saved (savedHelp keys) and my avatar
+async function loadMyUserData() {
   if (currentUser === null) return;
   try {
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    savedIds = new Set(Object.keys(userDoc.data()?.savedHelp || {}));
+    const data = (await getDoc(doc(db, "users", currentUser.uid))).data() || {};
+    savedIds = new Set(Object.keys(data.savedHelp || {}));
+    myAvatar = avatarCopy(data.avatar);
   } catch (error) {
     console.error("Error loading saved posts:", error);
     savedIds = new Set();
   }
+}
+
+// round author picture; avatar is the copy stored in the post or comment
+function createAvatarImg(avatar, size) {
+  const img = document.createElement("img");
+  img.className = "rounded-circle flex-shrink-0";
+  img.src = avatarSrc(avatar);
+  img.alt = "";
+  img.width = size;
+  img.height = size;
+  return img;
 }
 
 async function deletePost(id, deleteBtn) {
@@ -219,6 +233,7 @@ async function saveComment() {
     const comment = {
       text: text,
       userName: currentUser.displayName || currentUser.email,
+      userAvatar: myAvatar,
     };
     await updateDoc(doc(db, "helpPosts", postId), {
       ["comments." + uid + "." + commentId]: { ...comment, createdAt: serverTimestamp() },
@@ -271,21 +286,26 @@ function createCommentCard(comment) {
   const card = document.createElement("div");
   card.className = "border-start border-success border-3 ps-3 mb-3";
 
+  const header = document.createElement("div");
+  header.className = "d-flex align-items-center gap-2 mb-1";
+
   const author = document.createElement("small");
   author.className = "fw-bold";
   author.textContent = comment.userName || "Anonymous";
 
   const time = document.createElement("small");
-  time.className = "text-body-secondary ms-2";
+  time.className = "text-body-secondary";
   time.textContent = formatTime(comment.createdAt);
   time.title = formatFullTime(comment.createdAt);
+
+  header.append(createAvatarImg(comment.userAvatar, 24), author, time);
 
   const text = document.createElement("p");
   text.className = "mb-1";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = comment.text;
 
-  card.append(author, time, text);
+  card.append(header, text);
 
   // only the owner can delete
   if (currentUser !== null && comment.userID === currentUser.uid) {
@@ -428,14 +448,22 @@ function createPostCard(post, id) {
   const body = document.createElement("div");
   body.className = "card-body";
 
+  // avatar + name + time
+  const header = document.createElement("div");
+  header.className = "d-flex align-items-center gap-2 mb-2";
+
   const author = document.createElement("h3");
   author.className = "h6 fw-bold card-title mb-0";
   author.textContent = authorName(post);
 
   const time = document.createElement("small");
-  time.className = "text-body-secondary d-block mb-2";
+  time.className = "text-body-secondary d-block";
   time.textContent = formatTime(post.createdAt);
   time.title = formatFullTime(post.createdAt);
+
+  const nameAndTime = document.createElement("div");
+  nameAndTime.append(author, time);
+  header.append(createAvatarImg(post.ownerAvatar, 40), nameAndTime);
 
   const text = document.createElement("p");
   text.className = "card-text mb-0";
@@ -467,7 +495,7 @@ function createPostCard(post, id) {
     buttons.appendChild(deleteBtn);
   }
 
-  body.append(author, time, text, createRatingSection(id), buttons);
+  body.append(header, text, createRatingSection(id), buttons);
   card.appendChild(body);
   return card;
 }
@@ -491,7 +519,7 @@ function renderPosts() {
 async function showPosts() {
   try {
     const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
-    const [snapshot] = await Promise.all([getDocs(q), loadSavedIds()]);
+    const [snapshot] = await Promise.all([getDocs(q), loadMyUserData()]);
 
     posts = snapshot.docs.map((d) => {
       const post = d.data();
@@ -586,6 +614,7 @@ postForm.addEventListener("submit", async (e) => {
       question: question,
       ownerId: uid,
       ownerName: currentUser.displayName || currentUser.email,
+      ownerAvatar: myAvatar,
       createdAt: serverTimestamp(),
     });
     batch.set(doc(db, "users", uid, "postedHelp", postRef.id), {

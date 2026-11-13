@@ -1,5 +1,6 @@
 import { db } from "./firebaseConfig.js";
 import { collection, getDocs } from "firebase/firestore";
+import { avatarSrc } from "./avatar.js";
 
 const reportList = document.getElementById("reportList");
 
@@ -23,7 +24,7 @@ function createReportCard(id, report) {
 
   const avatar = document.createElement("img");
   avatar.className = "avatar rounded-circle";
-  avatar.src = "images/profile_icon.png";
+  avatar.src = avatarSrc(report.ownerAvatar);
   avatar.alt = "";
   avatar.width = 40;
   avatar.height = 40;

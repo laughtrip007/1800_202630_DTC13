@@ -24,11 +24,14 @@ service cloud.firestore {
       return mine == 0 || (mine is int && mine >= 1 && mine <= 5);
     }
 
-    // profile, saved maps, linkChecks, postedReports, postedHelp: owner only
     match /users/{uid} {
+      // profile, avatar and saved maps: owner only
       allow read, write: if isMe(uid);
-      match /{sub=**} {
-        allow read, write: if isMe(uid);
+
+      // private history and post index: owner only
+      match /{subcollection}/{docId} {
+        allow read, write: if isMe(uid)
+                           && subcollection in ["linkChecks", "postedReports", "postedHelp"];
       }
     }
 

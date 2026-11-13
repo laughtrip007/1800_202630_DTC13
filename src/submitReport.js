@@ -1,14 +1,18 @@
 import { db } from "./firebaseConfig.js";
 import { onAuthReady } from "./authentication.js";
 import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
+import { loadAvatar } from "./avatar.js";
 
 const form = document.getElementById("addReportForm");
 const submitBtn = document.getElementById("submitReportBtn");
 
 let currentUser = null;
+// my avatar, loaded in the background and copied into the report
+let myAvatarPromise = Promise.resolve(null);
 
 onAuthReady((user) => {
   currentUser = user;
+  if (user) myAvatarPromise = loadAvatar(user.uid).catch(() => null);
 });
 
 async function saveReport(event) {
@@ -27,7 +31,10 @@ async function saveReport(event) {
     return;
   }
 
+  submitBtn.disabled = true;
   const uid = currentUser.uid;
+  const ownerAvatar = await myAvatarPromise;
+
   // make the id first so the user's postedReports entry can use the same one
   const reportRef = doc(collection(db, "scamReports"));
   const batch = writeBatch(db);
@@ -37,6 +44,7 @@ async function saveReport(event) {
     details: details,
     ownerId: uid,
     ownerName: currentUser.displayName || currentUser.email,
+    ownerAvatar: ownerAvatar,
     createdAt: serverTimestamp(),
   });
   batch.set(doc(db, "users", uid, "postedReports", reportRef.id), {
@@ -45,7 +53,6 @@ async function saveReport(event) {
     createdAt: serverTimestamp(),
   });
 
-  submitBtn.disabled = true;
   try {
     await batch.commit();
     location.href = "scam_reports.html";
