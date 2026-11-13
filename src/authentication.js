@@ -1,4 +1,4 @@
-import { db } from "/src/firebaseConfig.js";
+import { db } from "/src/firebase-config.js";
 import { doc, setDoc } from "firebase/firestore";
 
 // src/authentication.js
@@ -10,7 +10,7 @@ import { doc, setDoc } from "firebase/firestore";
 // -------------------------------------------------------------
 
 // Import the initialized Firebase Authentication object
-import { auth } from "/src/firebaseConfig.js";
+import { auth } from "/src/firebase-config.js";
 
 // Import specific functions from the Firebase Auth SDK
 import {

@@ -1,5 +1,5 @@
 import { onAuthReady } from "/src/authentication.js";
-import { db } from "/src/firebaseConfig.js";
+import { db } from "/src/firebase-config.js";
 import { doc, getDoc } from "firebase/firestore";
 
 onAuthReady(async (user) => {

@@ -1,5 +1,5 @@
 import { logoutUser, onAuthReady } from "/src/authentication.js";
-import logoUrl from "/images/SafeLink-Logo.png";
+import logoUrl from "/images/safelink-logo.png";
 
 class SiteNavbar extends HTMLElement {
   connectedCallback() {

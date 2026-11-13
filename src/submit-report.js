@@ -1,4 +1,4 @@
-import { db } from "./firebaseConfig.js";
+import { db } from "./firebase-config.js";
 import { onAuthReady } from "./authentication.js";
 import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { loadAvatar } from "./avatar.js";
@@ -49,13 +49,13 @@ async function saveReport(event) {
   });
   batch.set(doc(db, "users", uid, "postedReports", reportRef.id), {
     title: queryText,
-    href: "scam_query.html?id=" + reportRef.id,
+    href: "scam-query.html?id=" + reportRef.id,
     createdAt: serverTimestamp(),
   });
 
   try {
     await batch.commit();
-    location.href = "scam_reports.html";
+    location.href = "scam-reports.html";
   } catch (error) {
     alert(`Error saving report:\n${error.code || ""}\n${error.message || error}`);
     submitBtn.disabled = false;

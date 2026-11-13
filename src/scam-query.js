@@ -1,4 +1,4 @@
-import { db } from "./firebaseConfig.js";
+import { db } from "./firebase-config.js";
 import { doc, onSnapshot } from "firebase/firestore";
 import { avatarSrc } from "./avatar.js";
 
@@ -6,7 +6,7 @@ function showReport() {
   const id = new URLSearchParams(location.search).get("id");
 
   if (!id) {
-    location.replace("scam_reports.html");
+    location.replace("scam-reports.html");
     return;
   }
 

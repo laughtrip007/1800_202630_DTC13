@@ -14,10 +14,10 @@ const pages = [
   "link-checker",
   "analyzing",
   "link-result",
-  "scam_reports",
-  "scam_query",
-  "submitReport",
-  "community_help",
+  "scam-reports",
+  "scam-query",
+  "submit-report",
+  "community-help",
 ];
 
 export default defineConfig({

@@ -1,6 +1,6 @@
-import { db } from "/src/firebaseConfig.js";
+import { db } from "/src/firebase-config.js";
 import { onAuthReady } from "/src/authentication.js";
-import { createSaveButton, setSaveLook } from "/src/saveButton.js";
+import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy } from "/src/avatar.js";
 import {
   collection,
@@ -556,7 +556,7 @@ async function toggleSave(post, saveBtn) {
       const item = {
         title: post.question,
         text: "Asked by " + authorName(post),
-        href: "community_help.html#post-" + post.id,
+        href: "community-help.html#post-" + post.id,
         savedAt: serverTimestamp(),
       };
       await setDoc(userRef, { savedHelp: { [post.id]: item } }, { merge: true });
@@ -619,7 +619,7 @@ postForm.addEventListener("submit", async (e) => {
     });
     batch.set(doc(db, "users", uid, "postedHelp", postRef.id), {
       title: question,
-      href: "community_help.html#post-" + postRef.id,
+      href: "community-help.html#post-" + postRef.id,
       createdAt: serverTimestamp(),
     });
     await batch.commit();

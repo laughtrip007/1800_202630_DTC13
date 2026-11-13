@@ -63,7 +63,7 @@ A short index of what the user has posted. **The document id is the same as the 
 | Field | Type | Notes |
 |---|---|---|
 | `title` | string | Report `query`, or the post's `question` |
-| `href` | string | `scam_query.html?id=<id>` or `community_help.html#post-<id>` |
+| `href` | string | `scam-query.html?id=<id>` or `community-help.html#post-<id>` |
 | `createdAt` | timestamp | |
 
 The full content stays in `scamReports` / `helpPosts`. This is only so each user's posts show up under their account.

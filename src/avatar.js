@@ -2,7 +2,7 @@
 // The user's own avatar is the `avatar` field on users/{uid}, which only they can read.
 // When they post or comment, a copy goes into the post (ownerAvatar / userAvatar) so
 // everyone sees it, the same way ownerName works. No avatar means the default icon.
-import { db } from "/src/firebaseConfig.js";
+import { db } from "/src/firebase-config.js";
 import { doc, getDoc, setDoc, updateDoc, deleteField } from "firebase/firestore";
 
 export const DEFAULT_AVATAR = "images/default-avatar.svg";

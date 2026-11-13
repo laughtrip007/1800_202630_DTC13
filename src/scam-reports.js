@@ -1,4 +1,4 @@
-import { db } from "./firebaseConfig.js";
+import { db } from "./firebase-config.js";
 import { collection, getDocs } from "firebase/firestore";
 import { avatarSrc } from "./avatar.js";
 
@@ -48,7 +48,7 @@ function createReportCard(id, report) {
   linkRow.className = "text-end";
   const link = document.createElement("a");
   link.className = "btn btn-outline-success btn-sm";
-  link.href = "scam_query.html?id=" + encodeURIComponent(id);
+  link.href = "scam-query.html?id=" + encodeURIComponent(id);
   link.textContent = "View post";
   linkRow.appendChild(link);
 

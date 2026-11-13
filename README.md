@@ -61,12 +61,12 @@ Once the application is running:
 1800_202630_DTC13/
 ├── src/                 # one script per page, plus shared modules
 │   ├── app.js           # loaded by every page: Bootstrap, navbars, login check
-│   ├── firebaseConfig.js
+│   ├── firebase-config.js
 │   ├── authentication.js
 │   ├── site-navbar.js   # <site-navbar> top bar
 │   ├── bottom-nav.js    # <bottom-nav> Home / Features / Profile
-│   ├── saveButton.js    # shared Save / Saved button
-│   └── ...              # main.js, profile.js, communityhelp.js, etc.
+│   ├── save-button.js   # shared Save / Saved button
+│   └── ...              # page scripts share the page's name, e.g. community-help.js
 ├── styles/
 │   └── style.css
 ├── images/

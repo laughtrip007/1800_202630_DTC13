@@ -1,4 +1,4 @@
-import { db, auth } from "./firebaseConfig.js";
+import { db, auth } from "./firebase-config.js";
 import {
   collection,
   doc,
@@ -7,7 +7,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { normalizeLink } from "./linkId.js";
+import { normalizeLink } from "./link-id.js";
 
 const RESULTS = {
   safe: {

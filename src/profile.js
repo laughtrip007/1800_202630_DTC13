@@ -1,8 +1,8 @@
 import { onAuthReady, logoutUser } from "/src/authentication.js";
-import { db } from "/src/firebaseConfig.js";
-import { createSaveButton, setSaveLook } from "/src/saveButton.js";
+import { db } from "/src/firebase-config.js";
+import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy } from "/src/avatar.js";
-import { createAvatarPicker } from "/src/avatarPicker.js";
+import { createAvatarPicker } from "/src/avatar-picker.js";
 import {
   doc,
   getDoc,
@@ -71,6 +71,17 @@ function buildCheckItem(check) {
   return row;
 }
 
+// items saved before the pages were renamed still have the old file names
+const OLD_PAGES = {
+  "scam_query.html": "scam-query.html",
+  "community_help.html": "community-help.html",
+};
+
+function fixOldHref(href) {
+  const page = href.split(/[?#]/)[0];
+  return Object.hasOwn(OLD_PAGES, page) ? OLD_PAGES[page] + href.slice(page.length) : href;
+}
+
 // onToggle is optional: when given, the row gets a Save/Saved button
 function buildSavedItem(item, onToggle) {
   const row = document.createElement("div");
@@ -86,7 +97,7 @@ function buildSavedItem(item, onToggle) {
   title.className = "fw-semibold d-block text-reset text-decoration-none";
   title.textContent = item.title || "Untitled";
   if (item.href) {
-    title.href = item.href;
+    title.href = fixOldHref(item.href);
     title.classList.add("stretched-link");
   }
   body.appendChild(title);
