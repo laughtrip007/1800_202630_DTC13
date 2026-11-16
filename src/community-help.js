@@ -201,6 +201,13 @@ function openComments(postId, post) {
   if (postId !== openPostId) commentInput.value = "";
   openPostId = postId;
   commentQuestion.textContent = post.question;
+
+  // keep the panel between the top navbar and the bottom nav
+  const navbar = document.querySelector("site-navbar nav");
+  const bottomNav = document.querySelector(".bottom-nav");
+  commentPanel.style.top = Math.max(0, navbar.getBoundingClientRect().bottom) + "px";
+  commentPanel.style.bottom = bottomNav.offsetHeight + "px";
+
   commentPanel.classList.remove("d-none");
   showComments();
 }
