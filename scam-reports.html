@@ -31,7 +31,14 @@
         class="form-control form-control-lg mb-3"
         placeholder="Search reports by keyword..."
       />
-
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <label for="dateFilter" class="form-label mb-0">Date filter</label>
+        <select id="dateFilter" class="form-select w-auto">
+          <option value="all">All</option>
+          <option value="earliest">Earliest</option>
+          <option value="latest">Latest</option>
+        </select>
+      </div>
       <div id="reportList">
         <p class="text-body-secondary text-center">Loading…</p>
       </div>
