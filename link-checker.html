@@ -10,13 +10,18 @@
     <site-navbar></site-navbar>
 
     <main class="container page py-4">
-      <a href="features.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+      <a
+        href="features.html"
+        class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3"
+      >
         <i class="bi bi-arrow-left" aria-hidden="true"></i>
         <span>All Features</span>
       </a>
-      <div class="card border-0 shadow-sm mb-4 text-center page-header">
-        <div class="card-body py-3">
-          <h1 class="h3 fw-bold mb-0">Link Checker</h1>
+      <div
+        class="card border-0 shadow-sm mb-4 text-center page-header bg-white"
+      >
+        <div class="card-body py-3 bg-success-subtle">
+          <h1 class="h3 fw-bold mb-0 text-success">Link Checker</h1>
         </div>
       </div>
 
@@ -27,7 +32,9 @@
             help you make a safer decision.
           </p>
           <form id="linkForm" novalidate>
-            <label for="linkInput" class="form-label fw-bold">Enter a link</label>
+            <label for="linkInput" class="form-label fw-bold"
+              >Enter a link</label
+            >
             <input
               id="linkInput"
               type="url"
@@ -36,17 +43,26 @@
               class="form-control form-control-lg mb-3"
               placeholder="https://example.com"
             />
+
             <div class="d-grid">
-              <button type="submit" class="btn btn-success btn-lg">Analyze Link</button>
+              <button type="submit" class="btn btn-success btn-lg">
+                Analyze Link
+              </button>
             </div>
           </form>
+          <p class="text-center text-muted small mt-3 mb-0">
+            SafeLink uses the Google Safe Browsing API to check links against
+            known threats.
+          </p>
         </div>
       </section>
 
       <section class="card border-0 shadow-sm mb-4">
         <div class="card-body text-center">
           <h2 class="h5 fw-bold">Total Links Checked</h2>
-          <p id="linkCheckCounter" class="display-5 text-success fw-bold mb-0">0</p>
+          <p id="linkCheckCounter" class="display-5 text-success fw-bold mb-0">
+            0
+          </p>
         </div>
       </section>
 
