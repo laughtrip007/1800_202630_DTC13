@@ -10,25 +10,29 @@
     <site-navbar></site-navbar>
 
     <main class="container page py-4">
-      <a href="scam_reports.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+      <a href="scam-reports.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
         <i class="bi bi-arrow-left" aria-hidden="true"></i>
         <span>All Reports</span>
       </a>
 
       <div class="card border-0 shadow-sm mb-4 page-header">
         <div class="card-body d-flex align-items-center gap-3">
-          <img class="avatar rounded-circle" src="images/profile_icon.png" alt="" width="40" height="40" />
+          <img id="ownerAvatar" class="avatar rounded-circle bg-white" src="images/default-avatar.svg" alt="" width="40" height="40" />
           <p class="h5 mb-0"><span id="username_goes_here">Loading…</span></p>
         </div>
       </div>
 
       <article class="bg-white border rounded-3 shadow-sm p-4">
-        <h1 class="h3 fw-bold"><span id="query_goes_here"></span></h1>
+        <h1 class="h3 fw-bold mb-1"><span id="query_goes_here"></span></h1>
+        <p class="small text-body-secondary mb-3"><span id="date_goes_here"></span></p>
         <p class="mb-0" style="white-space: pre-wrap"><span id="message_goes_here"></span></p>
+        <button id="deleteBtn" type="button" class="btn btn-outline-danger btn-sm mt-3 d-none">
+          Delete report
+        </button>
       </article>
     </main>
 
     <bottom-nav></bottom-nav>
-    <script type="module" src="/src/scam_query.js"></script>
+    <script type="module" src="/src/scam-query.js"></script>
   </body>
 </html>

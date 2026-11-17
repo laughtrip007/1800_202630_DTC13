@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scam Reports · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="features.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>All Features</span>
+      </a>
+      <a href="submit-report.html" class="btn d-inline-flex align-items-center gap-2 mb-3 float-end" 
+        style="background-color: #6e6bff;">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span>Submit a report</span>
+      </a>
+      <div class="card mb-4 text-center page-header" style="border-radius: 15px; background-color: #3CB361;">
+        <div class="card-body py-3" style="box-shadow: 10px 10px 5px black; border-radius: 15px;">
+          <h1 class="h3 fw-bold mb-0">-- Scam Reports --</h1>
+        </div>
+      </div>
+
+      <input
+        id="searchInput"
+        type="search"
+        class="form-control form-control-lg mb-3"
+        placeholder="Search reports by keyword..."
+      />
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <label for="dateFilter" class="form-label mb-0">Date filter</label>
+        <select id="dateFilter" class="form-select w-auto">
+          <option value="all">All</option>
+          <option value="earliest">Earliest</option>
+          <option value="latest">Latest</option>
+        </select>
+      </div>
+      <div id="reportList">
+        <p class="text-body-secondary text-center">Loading…</p>
+      </div>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/scam-reports.js"></script>
+  </body>
+</html>

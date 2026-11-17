@@ -1,9 +1,22 @@
 import { onAuthReady, logoutUser } from "/src/authentication.js";
-import { db } from "/src/firebaseConfig.js";
-import { doc, getDoc, collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { db } from "/src/firebase-config.js";
+import { createSaveButton, setSaveLook } from "/src/save-button.js";
+import { avatarSrc, avatarCopy } from "/src/avatar.js";
+import { createAvatarPicker } from "/src/avatar-picker.js";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteField,
+  collection,
+  query,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
 
-// saved items: users/{uid}/savedReports and users/{uid}/savedHelp
-// fields: title, text, href, savedAt
+// data layout: see FIRESTORE.md
+// saved items: savedReports / savedHelp map fields on users/{uid}
+// link checks: users/{uid}/linkChecks
 
 function formatDate(timestamp) {
   const date = timestamp?.toDate?.();
@@ -58,37 +71,71 @@ function buildCheckItem(check) {
   return row;
 }
 
-function buildSavedItem(item) {
-  const row = document.createElement(item.href ? "a" : "div");
-  row.className = "list-group-item px-0" + (item.href ? " list-group-item-action" : "");
-  if (item.href) row.href = item.href;
+// items saved before the pages were renamed still have the old file names
+const OLD_PAGES = {
+  "scam_query.html": "scam-query.html",
+  "community_help.html": "community-help.html",
+};
 
-  const title = document.createElement("div");
-  title.className = "fw-semibold";
+function fixOldHref(href) {
+  const page = href.split(/[?#]/)[0];
+  return Object.hasOwn(OLD_PAGES, page) ? OLD_PAGES[page] + href.slice(page.length) : href;
+}
+
+// onToggle is optional: when given, the row gets a Save/Saved button
+function buildSavedItem(item, onToggle) {
+  const row = document.createElement("div");
+  row.className = "list-group-item px-0 d-flex align-items-start gap-2 position-relative";
+  if (item.href) row.classList.add("list-group-item-action");
+
+  const body = document.createElement("div");
+  body.className = "flex-grow-1";
+  body.style.minWidth = "0";
+
+  // stretched-link makes the whole row clickable, but a button can't go inside <a>
+  const title = document.createElement(item.href ? "a" : "div");
+  title.className = "fw-semibold d-block text-reset text-decoration-none";
   title.textContent = item.title || "Untitled";
-  row.appendChild(title);
+  if (item.href) {
+    title.href = fixOldHref(item.href);
+    title.classList.add("stretched-link");
+  }
+  body.appendChild(title);
 
   if (item.text) {
     const text = document.createElement("p");
     text.className = "small text-body-secondary mb-1 text-truncate-2";
     text.textContent = item.text;
-    row.appendChild(text);
+    body.appendChild(text);
   }
 
   const date = document.createElement("small");
   date.className = "text-body-secondary";
   date.textContent = item.savedAt ? `Saved ${formatDate(item.savedAt)}` : "";
-  row.appendChild(date);
+  body.appendChild(date);
+
+  row.appendChild(body);
+
+  if (onToggle) {
+    // same Save/Saved button as Community Help; z-2 keeps it above the stretched link
+    const saveBtn = createSaveButton(item.saved);
+    saveBtn.classList.add("flex-shrink-0", "position-relative", "z-2");
+    saveBtn.addEventListener("click", async () => {
+      await onToggle(item, saveBtn);
+      // unsaved items stay in the list (faded) so they can be saved again
+      body.classList.toggle("opacity-50", !item.saved);
+    });
+    row.appendChild(saveBtn);
+  }
 
   return row;
 }
 
 async function loadLinkChecks(uid) {
   try {
-    const snapshot = await getDocs(query(collection(db, "linkChecks"), where("userID", "==", uid)));
-    const checks = snapshot.docs
-      .map((d) => d.data())
-      .sort((a, b) => (b.checkedAt?.toMillis?.() ?? 0) - (a.checkedAt?.toMillis?.() ?? 0));
+    const q = query(collection(db, "users", uid, "linkChecks"), orderBy("checkedAt", "desc"));
+    const snapshot = await getDocs(q);
+    const checks = snapshot.docs.map((d) => d.data());
     renderList("checks", checks, "You haven't checked any links yet.", buildCheckItem);
   } catch (error) {
     console.error("Error loading link checks:", error);
@@ -96,15 +143,50 @@ async function loadLinkChecks(uid) {
   }
 }
 
-async function loadSaved(uid, subcollection, key, emptyMessage) {
-  try {
-    const q = query(collection(db, "users", uid, subcollection), orderBy("savedAt", "desc"));
-    const snapshot = await getDocs(q);
-    renderList(key, snapshot.docs.map((d) => d.data()), emptyMessage, buildSavedItem);
-  } catch (error) {
-    console.error(`Error loading ${subcollection}:`, error);
-    showError(key);
+// saved items are a map field on the user doc: { <id>: { title, text, href, savedAt } }
+// canUnsave: show a Save/Saved button on each item
+function showSaved(uid, savedMap, field, key, emptyMessage, canUnsave = false) {
+  const userRef = doc(db, "users", uid);
+
+  // id = post/report id; data is kept so an unsave can be undone (same savedAt, same order)
+  const items = Object.entries(savedMap || {})
+    .map(([id, data]) => ({ ...data, id: id, data: data, saved: true }))
+    .sort((a, b) => (b.savedAt?.toMillis?.() ?? 0) - (a.savedAt?.toMillis?.() ?? 0));
+
+  async function toggleSaved(item, saveBtn) {
+    const path = field + "." + item.id;
+    saveBtn.disabled = true;
+    try {
+      await updateDoc(userRef, { [path]: item.saved ? deleteField() : item.data });
+      item.saved = !item.saved;
+      setSaveLook(saveBtn, item.saved);
+      document.querySelector(`#${key}Count`).textContent = items.filter((i) => i.saved).length;
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      alert("Could not update your saved list. Please try again.");
+    } finally {
+      saveBtn.disabled = false;
+    }
   }
+
+  renderList(key, items, emptyMessage, (item) =>
+    buildSavedItem(item, canUnsave ? toggleSaved : null),
+  );
+}
+
+// profile picture: the avatar field on users/{uid}, changed through the picker modal
+function setUpAvatar(uid, initialAvatar) {
+  const avatarImg = document.querySelector("#profileAvatar");
+  let avatar = null;
+
+  function show(newAvatar) {
+    avatar = newAvatar;
+    avatarImg.src = avatarSrc(avatar);
+  }
+
+  const picker = createAvatarPicker({ uid, onSaved: show });
+  document.querySelector("#avatarBtn").addEventListener("click", () => picker.open(avatar));
+  show(initialAvatar);
 }
 
 onAuthReady(async (user) => {
@@ -115,18 +197,25 @@ onAuthReady(async (user) => {
     user.metadata.creationTime,
   ).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
 
+  loadLinkChecks(user.uid);
+
+  // one read gives the name, the avatar and both saved lists
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    const name = userDoc.exists() ? userDoc.data().name : user.displayName;
-    document.querySelector("#profileName").textContent = name || "SafeLink user";
+    const data = userDoc.data() || {};
+    document.querySelector("#profileName").textContent =
+      data.name || user.displayName || "SafeLink user";
+    setUpAvatar(user.uid, avatarCopy(data.avatar));
+
+    showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.");
+    showSaved(user.uid, data.savedHelp, "savedHelp", "help", "No saved help pages yet.", true);
   } catch (error) {
     console.error("Error loading profile:", error);
     document.querySelector("#profileName").textContent = user.displayName || "SafeLink user";
+    setUpAvatar(user.uid, null);
+    showError("reports");
+    showError("help");
   }
-
-  loadLinkChecks(user.uid);
-  loadSaved(user.uid, "savedReports", "reports", "No saved scam reports yet.");
-  loadSaved(user.uid, "savedHelp", "help", "No saved help pages yet.");
 });
 
 document.querySelector("#logoutBtn").addEventListener("click", logoutUser);

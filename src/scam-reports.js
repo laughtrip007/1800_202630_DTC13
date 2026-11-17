@@ -1,0 +1,120 @@
+import { db } from "./firebase-config.js";
+import { collection, getDocs } from "firebase/firestore";
+import { avatarSrc } from "./avatar.js";
+
+const reportList = document.getElementById("reportList");
+const searchInput = document.getElementById("searchInput");
+
+let allReports = [];
+
+// older reports used username/message instead of ownerName/details
+function reportFields(report) {
+  return {
+    name: report.ownerName || report.username || "Anonymous",
+    query: report.query || "Untitled report",
+    details: report.details || report.message || "",
+  };
+}
+
+// shows the date like "Nov 16, 2026"
+function formatDate(timestamp) {
+  const date = timestamp?.toDate?.();
+  return date
+    ? date.toLocaleDateString("en-CA", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
+}
+
+function createReportCard(id, report) {
+  const { name, query, details } = reportFields(report);
+
+  const card = document.createElement("article");
+  card.className = "card border-0 shadow-sm mb-3";
+
+  const body = document.createElement("div");
+  body.className = "card-body d-flex gap-3";
+
+  const avatar = document.createElement("img");
+  avatar.className = "avatar rounded-circle";
+  avatar.src = avatarSrc(report.ownerAvatar);
+  avatar.alt = "";
+  avatar.width = 40;
+  avatar.height = 40;
+
+  const content = document.createElement("div");
+  content.className = "flex-grow-1 text-break";
+
+  const author = document.createElement("h2");
+  author.className = "h6 fw-bold mb-0";
+  author.textContent = name;
+
+  const date = document.createElement("small");
+  date.className = "text-body-secondary d-block mb-2";
+  date.textContent = formatDate(report.createdAt || report.last_updated);
+
+  const title = document.createElement("p");
+  title.className = "small text-body-secondary mb-2";
+  title.textContent = query;
+
+  const text = document.createElement("p");
+  text.className = "card-text text-truncate-2";
+  text.textContent = details;
+
+  const linkRow = document.createElement("div");
+  linkRow.className = "text-end";
+  const link = document.createElement("a");
+  link.className = "btn btn-outline-success btn-sm";
+  link.href = "scam-query.html?id=" + encodeURIComponent(id);
+  link.textContent = "View post";
+  linkRow.appendChild(link);
+
+  content.append(author, date, title, text, linkRow);
+  body.append(avatar, content);
+  card.appendChild(body);
+  return card;
+}
+
+// shows the reports that contain the keyword (all of them if the box is empty)
+function showReports() {
+  const keyword = searchInput.value.trim().toLowerCase();
+
+  const reports = allReports.filter((d) => {
+    const { name, query, details } = reportFields(d.data());
+    return (name + " " + query + " " + details).toLowerCase().includes(keyword);
+  });
+
+  reportList.innerHTML = "";
+
+  if (reports.length === 0) {
+    const p = document.createElement("p");
+    p.className = "text-body-secondary text-center";
+    p.textContent =
+      keyword === "" ? "No reports yet. Be the first to submit one!" : "No reports match your search.";
+    reportList.appendChild(p);
+    return;
+  }
+
+  reports.forEach((d) => reportList.appendChild(createReportCard(d.id, d.data())));
+}
+
+async function loadReports() {
+  try {
+    const snapshot = await getDocs(collection(db, "scamReports"));
+
+    // newest first; sorted here so reports without a date still show
+    const time = (d) => (d.data().createdAt ?? d.data().last_updated)?.toMillis?.() ?? 0;
+    allReports = snapshot.docs.sort((a, b) => time(b) - time(a));
+
+    showReports();
+  } catch (error) {
+    console.error("Error loading reports:", error);
+    reportList.innerHTML = `<p class="text-danger text-center">Could not load reports.</p>`;
+  }
+}
+
+searchInput.addEventListener("input", showReports);
+
+loadReports();

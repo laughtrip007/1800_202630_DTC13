@@ -18,7 +18,11 @@
 
       <section class="card border-0 shadow-sm">
         <div class="card-body text-center py-5">
-          <div class="spinner-border text-success" style="width: 5rem; height: 5rem" role="status">
+          <div
+            class="spinner-border text-success"
+            style="width: 5rem; height: 5rem"
+            role="status"
+          >
             <span class="visually-hidden">Analyzing…</span>
           </div>
           <h2 class="h3 fw-bold mt-4">Analyzing Link…</h2>
@@ -28,14 +32,6 @@
     </main>
 
     <bottom-nav></bottom-nav>
-    <script>
-      const url = localStorage.getItem("checkedURL");
-      if (!url) {
-        location.replace("link-checker.html");
-      } else {
-        document.getElementById("analyzingUrl").textContent = url;
-        setTimeout(() => location.replace("link-result.html"), 2500);
-      }
-    </script>
+    <script type="module" src="/src/analyzing.js"></script>
   </body>
 </html>
