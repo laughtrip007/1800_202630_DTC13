@@ -35,15 +35,11 @@ service cloud.firestore {
       }
     }
 
-    // public link counts: anyone can read, a check can only add 1
-    match /links/{linkId} {
+    // each user's current avatar, so posts show it: anyone signed in reads, owner writes
+    match /publicProfiles/{uid} {
       allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.checkCount == 1;
-      allow update: if signedIn()
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(["checkCount", "results", "lastResult", "lastCheckedAt"])
-                    && request.resource.data.checkCount == resource.data.checkCount + 1;
+      allow create, update: if isMe(uid)
+                            && request.resource.data.keys().hasOnly(["avatar"]);
     }
 
     // scam reports: author edits and deletes

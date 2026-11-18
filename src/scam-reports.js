@@ -1,6 +1,6 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "firebase/firestore";
-import { avatarSrc } from "./avatar.js";
+import { avatarSrc, loadPublicAvatars, authorAvatar } from "./avatar.js";
 
 const reportList = document.getElementById("reportList");
 const searchInput = document.getElementById("searchInput");
@@ -39,7 +39,7 @@ function createReportCard(id, report) {
 
   const avatar = document.createElement("img");
   avatar.className = "avatar rounded-circle";
-  avatar.src = avatarSrc(report.ownerAvatar);
+  avatar.src = avatarSrc(authorAvatar(report.ownerId, report.ownerAvatar));
   avatar.alt = "";
   avatar.width = 40;
   avatar.height = 40;
@@ -107,6 +107,7 @@ async function loadReports() {
     // newest first; sorted here so reports without a date still show
     const time = (d) => (d.data().createdAt ?? d.data().last_updated)?.toMillis?.() ?? 0;
     allReports = snapshot.docs.sort((a, b) => time(b) - time(a));
+    await loadPublicAvatars(allReports.map((d) => d.data().ownerId));
 
     showReports();
   } catch (error) {

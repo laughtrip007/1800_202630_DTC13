@@ -1,7 +1,7 @@
 import { db } from "/src/firebase-config.js";
 import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
-import { avatarSrc, avatarCopy } from "/src/avatar.js";
+import { avatarSrc, avatarCopy, loadPublicAvatars, authorAvatar } from "/src/avatar.js";
 import {
   collection,
   getDoc,
@@ -122,11 +122,18 @@ async function loadMyUserData() {
   }
 }
 
-// round author picture; avatar is the copy stored in the post or comment
-function createAvatarImg(avatar, size) {
+// my own picture comes from my users doc; anyone else's from publicProfiles,
+// or the copy stored in the post or comment
+function currentAvatar(uid, savedCopy) {
+  if (currentUser !== null && uid === currentUser.uid) return myAvatar;
+  return authorAvatar(uid, savedCopy);
+}
+
+// round author picture
+function createAvatarImg(uid, savedCopy, size) {
   const img = document.createElement("img");
   img.className = "rounded-circle flex-shrink-0";
-  img.src = avatarSrc(avatar);
+  img.src = avatarSrc(currentAvatar(uid, savedCopy));
   img.alt = "";
   img.width = size;
   img.height = size;
@@ -305,7 +312,7 @@ function createCommentCard(comment) {
   time.textContent = formatTime(comment.createdAt);
   time.title = formatFullTime(comment.createdAt);
 
-  header.append(createAvatarImg(comment.userAvatar, 24), author, time);
+  header.append(createAvatarImg(comment.userID, comment.userAvatar, 24), author, time);
 
   const text = document.createElement("p");
   text.className = "mb-1";
@@ -470,7 +477,7 @@ function createPostCard(post, id) {
 
   const nameAndTime = document.createElement("div");
   nameAndTime.append(author, time);
-  header.append(createAvatarImg(post.ownerAvatar, 40), nameAndTime);
+  header.append(createAvatarImg(post.ownerId, post.ownerAvatar, 40), nameAndTime);
 
   const text = document.createElement("p");
   text.className = "card-text mb-0";
@@ -534,6 +541,10 @@ async function showPosts() {
       return post;
     });
     readPostExtras();
+    await loadPublicAvatars([
+      ...posts.map((post) => post.ownerId),
+      ...comments.map((comment) => comment.userID),
+    ]);
     renderPosts();
     scrollToLinkedPost();
   } catch (error) {

@@ -1,7 +1,7 @@
 import { db } from "./firebase-config.js";
 import { onAuthReady } from "./authentication.js";
 import { doc, onSnapshot, deleteDoc } from "firebase/firestore";
-import { avatarSrc } from "./avatar.js";
+import { avatarSrc, loadPublicAvatars, authorAvatar } from "./avatar.js";
 
 const deleteBtn = document.getElementById("deleteBtn");
 const id = new URLSearchParams(location.search).get("id");
@@ -46,6 +46,14 @@ async function deleteReport() {
   }
 }
 
+// the copy in the report first, then the current picture from publicProfiles
+async function showOwnerAvatar(shown) {
+  const img = document.getElementById("ownerAvatar");
+  img.src = avatarSrc(authorAvatar(shown.ownerId, shown.ownerAvatar));
+  await loadPublicAvatars([shown.ownerId]);
+  if (report === shown) img.src = avatarSrc(authorAvatar(shown.ownerId, shown.ownerAvatar));
+}
+
 function showReport() {
   if (!id) {
     location.replace("scam-reports.html");
@@ -74,7 +82,7 @@ function showReport() {
         report.createdAt || report.last_updated,
       );
       document.getElementById("message_goes_here").textContent = report.details || report.message || "";
-      document.getElementById("ownerAvatar").src = avatarSrc(report.ownerAvatar);
+      showOwnerAvatar(report);
       showDeleteButton();
     },
     (error) => {

@@ -14,11 +14,11 @@ users/{uid}
 │  savedReports: { <reportId>: { title, text, href, savedAt } }
 │  savedHelp:    { <postId>:   { title, text, href, savedAt } }
 │
-├─ linkChecks/{checkId}        url, linkId, result, checkedAt
+├─ linkChecks/{checkId}        url, result, checkedAt
 ├─ postedReports/{reportId}    title, href, createdAt
 └─ postedHelp/{postId}         title, href, createdAt
 
-links/{linkId}                 url, checkCount, results, lastResult, lastCheckedAt
+publicProfiles/{uid}           avatar
 scamReports/{reportId}         query, details, ownerId, ownerName, ownerAvatar, createdAt
 helpPosts/{postId}             question, ownerId, ownerName, ownerAvatar, createdAt, ratings, comments
 ```
@@ -50,7 +50,6 @@ The user's own link check history. One document per check, auto id.
 | Field | Type | Notes |
 |---|---|---|
 | `url` | string | What the user typed |
-| `linkId` | string | Id of the matching `links` document (see below) |
 | `result` | string | `"safe"` or `"unsafe"`. `"notfound"` and `"error"` aren't saved |
 | `checkedAt` | timestamp | `serverTimestamp()` |
 
@@ -75,34 +74,16 @@ An avatar is just two names: `{ shape, color }`. The picture is drawn in the bro
 - `shape`: `circle`, `square`, `triangle`, `diamond`, `pentagon`, `hexagon`, `star`, `heart`, `shield`, `bolt`, `moon`, `flower`, `ring`, `plus`, `smile`
 - `color`: `green`, `teal`, `cyan`, `blue`, `indigo`, `purple`, `pink`, `red`, `orange`, `yellow`, `gray`, `dark`
 
-The user's own avatar lives on their private `users/{uid}` doc. Other users can't read that doc, so **when someone posts, a copy of their avatar goes into the post**, the same way `ownerName` works: `ownerAvatar` on reports and posts, `userAvatar` on comments. Changing your avatar later doesn't update old posts (just like changing your name).
+The user's own avatar lives on their private `users/{uid}` doc. Other users can't read that doc, so it is also saved to **`publicProfiles/{uid}`** (`{ avatar }`), which anyone signed in can read. `saveAvatar` / `removeAvatar` write both in one batch. Removing sets `avatar: null` there instead of deleting the doc.
 
-Use `avatarSrc(avatar)` from `src/avatar.js` to get an `<img>` src. It returns the default icon when the avatar is missing.
+Pages that show posts look up the author's **current** avatar by uid, so changing your picture updates your old posts and comments too:
 
-## `links/{linkId}`
+1. `await loadPublicAvatars(uids)` with the `ownerId`s (and comment uids) on the page
+2. `avatarSrc(authorAvatar(uid, savedCopy))` for each `<img>`
 
-Public check counts per link, so a page can show "this link has been checked 12 times" without exposing who checked it.
+When posting, a copy still goes into the post (`ownerAvatar` on reports and posts, `userAvatar` on comments). It's only used when the author has no `publicProfiles` doc yet (they haven't changed their picture since this was added) or the post is too old to have an `ownerId`. Names still work the old way: changing your name doesn't update old posts.
 
-| Field | Type | Notes |
-|---|---|---|
-| `url` | string | The normalized link (see below) |
-| `checkCount` | number | Total checks |
-| `results` | map | Count per result, e.g. `{ safe: 9, unsafe: 3 }` |
-| `lastResult` | string | |
-| `lastCheckedAt` | timestamp | |
-
-### How `linkId` is made
-
-The same link should always give the same id:
-
-1. If there's no `://`, add `https://` so `new URL()` can parse it.
-2. Lowercase the hostname and remove a leading `www.`
-3. Remove trailing `/` from the path.
-4. Keep the query string (`?...`). Scam links often use it to track victims.
-5. Drop the protocol and the `#hash`.
-6. `linkId = encodeURIComponent(host + path + search)`
-
-So `https://WWW.Example.com/login/?ref=1` → `example.com/login?ref=1` → `example.com%2Flogin%3Fref%3D1`.
+`avatarSrc(avatar)` returns the default icon when the avatar is missing.
 
 ## `scamReports/{reportId}`
 
@@ -143,7 +124,6 @@ Use `writeBatch` so both succeed or neither does.
 
 | Action | Writes |
 |---|---|
-| Check a link | add `users/{uid}/linkChecks/{auto}` + `set links/{linkId}` with `{ merge: true }` and `increment(1)` |
 | Submit a report | `scamReports/{id}` + `users/{uid}/postedReports/{id}` |
 | Ask a question | `helpPosts/{id}` + `users/{uid}/postedHelp/{id}` |
 | Delete a post | delete both of the above |
@@ -156,16 +136,16 @@ To know the id before writing, create the reference first: `const postRef = doc(
 |---|---|---|
 | Sign up | | `users/{uid}` |
 | Home | `users/{uid}` (name) | |
-| Link result | | `linkChecks` + `links` (batch) |
+| Link result | | `users/{uid}/linkChecks` |
 | Link checker | `users/{uid}/linkChecks` (latest 5, count) | |
-| Scam reports | `scamReports` | |
-| Report detail | `scamReports/{id}`, `users/{uid}` (saved?) | `users/{uid}.savedReports` |
+| Scam reports | `scamReports`, `publicProfiles` (authors) | |
+| Report detail | `scamReports/{id}`, `users/{uid}` (saved?), `publicProfiles/{ownerId}` | `users/{uid}.savedReports` |
 | Submit report | `users/{uid}` (avatar to copy) | `scamReports` + `postedReports` (batch) |
-| Community help | `helpPosts`, `users/{uid}` (saved? + avatar to copy) | `helpPosts` (+ `postedHelp`), `users/{uid}.savedHelp` |
-| Profile | `users/{uid}` (name, avatar, saved maps), `linkChecks` | `users/{uid}` (unsave, avatar) |
+| Community help | `helpPosts`, `users/{uid}` (saved? + avatar to copy), `publicProfiles` (authors) | `helpPosts` (+ `postedHelp`), `users/{uid}.savedHelp` |
+| Profile | `users/{uid}` (name, avatar, saved maps), `linkChecks` | `users/{uid}` (unsave, avatar), `publicProfiles/{uid}` (avatar) |
 
 `postedReports` and `postedHelp` are written already. The planned "My Reports" / "My Questions" lists on Profile will read them.
 
 ## Collections that are no longer used
 
-`linkChecks` and `avatars` (top level), `helpComments`, `helpRatings`, and the `savedReports` / `savedHelp` / `public` subcollections under users. They only hold test data and can be deleted from the console once the new code is merged.
+`links`, `linkChecks` and `avatars` (top level), `helpComments`, `helpRatings`, and the `savedReports` / `savedHelp` / `public` subcollections under users. They only hold test data and can be deleted from the console once the new code is merged.
