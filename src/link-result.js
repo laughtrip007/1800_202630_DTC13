@@ -1,13 +1,6 @@
 import { db, auth } from "./firebase-config.js";
-import {
-  collection,
-  doc,
-  writeBatch,
-  increment,
-  serverTimestamp,
-} from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { normalizeLink } from "./link-id.js";
 
 const RESULTS = {
   safe: {
@@ -64,39 +57,23 @@ function init() {
 
   document.querySelector("#resultDescription").textContent = info.description;
 
-  // Save to history once, and never save unverified results
-  if (!localStorage.getItem("resultSaved") && !UNSAVED_RESULTS.includes(result)) {
+  // Save to history once, and never save unverified or not-found results
+  if (
+    !localStorage.getItem("resultSaved") &&
+    !UNSAVED_RESULTS.includes(result)
+  ) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       unsubscribe();
 
       if (!user) return;
 
       try {
-        const { url, linkId } = normalizeLink(checkedURL);
-        const batch = writeBatch(db);
-
-        // the user's own history
-        batch.set(doc(collection(db, "users", user.uid, "linkChecks")), {
+        await addDoc(collection(db, "users", user.uid, "linkChecks"), {
           url: checkedURL,
-          linkId: linkId,
           result: result,
           checkedAt: serverTimestamp(),
         });
 
-        // public count for this link (created on the first check)
-        batch.set(
-          doc(db, "links", linkId),
-          {
-            url: url,
-            checkCount: increment(1),
-            results: { [result]: increment(1) },
-            lastResult: result,
-            lastCheckedAt: serverTimestamp(),
-          },
-          { merge: true },
-        );
-
-        await batch.commit();
         localStorage.setItem("resultSaved", "true");
       } catch (error) {
         console.error("Error saving link check:", error);
