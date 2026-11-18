@@ -19,6 +19,7 @@ users/{uid}
 └─ postedHelp/{postId}         title, href, createdAt
 
 publicProfiles/{uid}           avatar
+admins/{uid}                   (empty, added by hand)
 scamReports/{reportId}         query, details, ownerId, ownerName, ownerAvatar, createdAt
 helpPosts/{postId}             question, ownerId, ownerName, ownerAvatar, createdAt, ratings, comments
 ```
@@ -85,6 +86,19 @@ When posting, a copy still goes into the post (`ownerAvatar` on reports and post
 
 `avatarSrc(avatar)` returns the default icon when the avatar is missing.
 
+## `admins/{uid}`
+
+If this doc exists, that account is an admin. Add it by hand in the Firebase console (Start collection `admins`, document id = the user's uid from Authentication, no fields needed). The app can't write here.
+
+Admins see an **Admin** button on Profile that opens `admin.html`, where they can pick documents and delete them:
+
+- **Help posts**: deletes the post and the author's `postedHelp` entry. Single comments can be deleted too.
+- **Reports**: deletes the report and the author's `postedReports` entry.
+- **Users**: deletes `users/{uid}` with all its subcollections and `publicProfiles/{uid}`, optionally their posts and reports. Their login in Firebase Authentication stays.
+- **Other data**: any document in `publicProfiles`, the per-user subcollections, or the old collections below.
+
+The rules give admins read and delete on every document (`match /{document=**}`), plus updating `ratings` / `comments` on help posts.
+
 ## `scamReports/{reportId}`
 
 | Field | Type | Notes |
@@ -142,7 +156,8 @@ To know the id before writing, create the reference first: `const postRef = doc(
 | Report detail | `scamReports/{id}`, `users/{uid}` (saved?), `publicProfiles/{ownerId}` | `users/{uid}.savedReports` |
 | Submit report | `users/{uid}` (avatar to copy) | `scamReports` + `postedReports` (batch) |
 | Community help | `helpPosts`, `users/{uid}` (saved? + avatar to copy), `publicProfiles` (authors) | `helpPosts` (+ `postedHelp`), `users/{uid}.savedHelp` |
-| Profile | `users/{uid}` (name, avatar, saved maps), `linkChecks` | `users/{uid}` (unsave, avatar), `publicProfiles/{uid}` (avatar) |
+| Admin | everything (admins only) | deletes anything, comments on `helpPosts` |
+| Profile | `users/{uid}` (name, avatar, saved maps), `linkChecks`, `admins/{uid}` (admin?) | `users/{uid}` (unsave, avatar), `publicProfiles/{uid}` (avatar) |
 
 `postedReports` and `postedHelp` are written already. The planned "My Reports" / "My Questions" lists on Profile will read them.
 

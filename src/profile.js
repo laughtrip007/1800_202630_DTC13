@@ -3,6 +3,7 @@ import { db } from "/src/firebase-config.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy } from "/src/avatar.js";
 import { createAvatarPicker } from "/src/avatar-picker.js";
+import { isAdmin } from "/src/admin-check.js";
 import {
   doc,
   getDoc,
@@ -198,6 +199,10 @@ onAuthReady(async (user) => {
   ).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
 
   loadLinkChecks(user.uid);
+
+  isAdmin(user.uid).then((admin) => {
+    document.querySelector("#adminLink").classList.toggle("d-none", !admin);
+  });
 
   // one read gives the name, the avatar and both saved lists
   try {

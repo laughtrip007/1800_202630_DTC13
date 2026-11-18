@@ -5,6 +5,7 @@ import logoUrl from "/images/safelink-logo.png";
 const pages = {
   "features.html": { title: "Features" },
   "profile.html": { title: "Profile" },
+  "admin.html": { title: "Admin", back: "profile.html" },
   "link-checker.html": { title: "Link Checker", back: "features.html" },
   "analyzing.html": { title: "Link Checker" },
   "link-result.html": { title: "Link Checker", back: "link-checker.html" },

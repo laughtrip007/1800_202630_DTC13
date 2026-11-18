@@ -18,6 +18,7 @@ const pages = [
   "scam-query",
   "submit-report",
   "community-help",
+  "admin",
 ];
 
 export default defineConfig({

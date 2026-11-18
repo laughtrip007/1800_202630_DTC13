@@ -18,10 +18,24 @@ service cloud.firestore {
                .diff(resource.data.get(field, {}))
                .affectedKeys().hasOnly([request.auth.uid]);
     }
+    // admins/{uid} is added by hand in the Firebase console, never from the app
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
     // my rating is either removed or a whole number 1-5
     function validRating() {
       let mine = request.resource.data.get("ratings", {}).get(request.auth.uid, 0);
       return mine == 0 || (mine is int && mine >= 1 && mine <= 5);
+    }
+
+    // admin page (admin.html): admins can read and delete anything, including old collections
+    match /{document=**} {
+      allow read, delete: if isAdmin();
+    }
+
+    // lets the app check if I'm an admin; no one can write here from the app
+    match /admins/{uid} {
+      allow read: if isMe(uid);
     }
 
     match /users/{uid} {
@@ -54,6 +68,10 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create: if isMe(request.resource.data.ownerId);
       allow delete: if isMe(resource.data.ownerId);
+      // admins can remove anyone's comments or ratings
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["ratings", "comments"]);
       allow update: if signedIn()
                     && request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(["ratings", "comments"])
