@@ -15,20 +15,24 @@
         <span>All Reports</span>
       </a>
 
-      <div class="card border-0 shadow-sm mb-4 page-header">
-        <div class="card-body d-flex align-items-center gap-3">
-          <img id="ownerAvatar" class="avatar rounded-circle bg-white" src="images/default-avatar.svg" alt="" width="40" height="40" />
-          <p class="h5 mb-0"><span id="username_goes_here">Loading…</span></p>
-        </div>
-      </div>
-
       <article class="bg-white border rounded-3 shadow-sm p-4">
-        <h1 class="h3 fw-bold mb-1"><span id="query_goes_here"></span></h1>
-        <p class="small text-body-secondary mb-3"><span id="date_goes_here"></span></p>
+        <h1 class="h3 fw-bold mb-3"><span id="query_goes_here">Loading…</span></h1>
+
+        <!-- author: avatar, name and date together -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img id="ownerAvatar" class="avatar rounded-circle flex-shrink-0" src="images/default-avatar.svg" alt="" width="40" height="40" />
+          <div>
+            <p class="fw-bold mb-0"><span id="username_goes_here"></span></p>
+            <p class="small text-body-secondary mb-0"><span id="date_goes_here"></span></p>
+          </div>
+        </div>
+
         <p class="mb-0" style="white-space: pre-wrap"><span id="message_goes_here"></span></p>
-        <button id="deleteBtn" type="button" class="btn btn-outline-danger btn-sm mt-3 d-none">
-          Delete report
-        </button>
+        <div id="reportActions" class="d-flex flex-wrap gap-2 mt-3">
+          <button id="deleteBtn" type="button" class="btn btn-outline-danger btn-sm d-none">
+            Delete report
+          </button>
+        </div>
       </article>
     </main>
 

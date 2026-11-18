@@ -20,7 +20,7 @@ users/{uid}
 
 publicProfiles/{uid}           avatar
 admins/{uid}                   (empty, added by hand)
-scamReports/{reportId}         query, details, ownerId, ownerName, ownerAvatar, createdAt
+scamReports/{reportId}         query, details, ownerId, ownerName, ownerAvatar, createdAt, seenBy
 helpPosts/{postId}             question, ownerId, ownerName, ownerAvatar, createdAt, ratings, comments
 ```
 
@@ -43,6 +43,7 @@ Saved items are map fields, not subcollections, because the list is short and al
 - Save: `setDoc(userRef, { savedHelp: { [postId]: {...} } }, { merge: true })`
 - Unsave: `updateDoc(userRef, { ["savedHelp." + postId]: deleteField() })`
 - There is no `orderBy` on a map, so sort by `savedAt` in JavaScript.
+- A saved item is a copy, so it stays when the post is deleted. Profile checks each saved id still exists and removes the ones that don't.
 
 ### `users/{uid}/linkChecks/{checkId}`
 
@@ -109,8 +110,9 @@ The rules give admins read and delete on every document (`match /{document=**}`)
 | `ownerName` | string | |
 | `ownerAvatar` | map or null | Copy of the author's avatar when they posted |
 | `createdAt` | timestamp | (was `last_updated`) |
+| `seenBy` | map | `{ <uid>: true }`, people who tapped "I've seen this". The count is the number of keys |
 
-Anyone signed in can read. Only the author can edit or delete.
+Anyone signed in can read. Only the author can edit or delete. Anyone signed in can add or remove their own `seenBy` entry (`updateDoc(reportRef, { ["seenBy." + uid]: true })`, or `deleteField()` to undo). The author's button is disabled. Scam Reports can sort by this count ("Most seen").
 
 ## `helpPosts/{postId}`
 
@@ -152,8 +154,8 @@ To know the id before writing, create the reference first: `const postRef = doc(
 | Home | `users/{uid}` (name) | |
 | Link result | | `users/{uid}/linkChecks` |
 | Link checker | `users/{uid}/linkChecks` (latest 5, count) | |
-| Scam reports | `scamReports`, `publicProfiles` (authors) | |
-| Report detail | `scamReports/{id}`, `users/{uid}` (saved?), `publicProfiles/{ownerId}` | `users/{uid}.savedReports` |
+| Scam reports | `scamReports`, `publicProfiles` (authors), `users/{uid}` (saved?) | `users/{uid}.savedReports`, `scamReports/{id}.seenBy` |
+| Report detail | `scamReports/{id}`, `users/{uid}` (saved?), `publicProfiles/{ownerId}` | `users/{uid}.savedReports`, `scamReports/{id}.seenBy` |
 | Submit report | `users/{uid}` (avatar to copy) | `scamReports` + `postedReports` (batch) |
 | Community help | `helpPosts`, `users/{uid}` (saved? + avatar to copy), `publicProfiles` (authors) | `helpPosts` (+ `postedHelp`), `users/{uid}.savedHelp` |
 | Admin | everything (admins only) | deletes anything, comments on `helpPosts` |

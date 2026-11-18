@@ -56,11 +56,15 @@ service cloud.firestore {
                             && request.resource.data.keys().hasOnly(["avatar"]);
     }
 
-    // scam reports: author edits and deletes
+    // scam reports: author edits and deletes; anyone can add or remove their own "I've seen this"
     match /scamReports/{reportId} {
       allow read: if signedIn();
       allow create: if isMe(request.resource.data.ownerId);
       allow update, delete: if isMe(resource.data.ownerId);
+      allow update: if signedIn()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["seenBy"])
+                    && onlyMyEntry("seenBy")
+                    && request.resource.data.get("seenBy", {}).get(request.auth.uid, true) == true;
     }
 
     // help posts: author deletes; anyone can rate/comment inside their own uid entry

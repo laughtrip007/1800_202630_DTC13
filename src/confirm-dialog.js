@@ -7,7 +7,7 @@ let modalEl = null;
 // one modal for the whole page, created the first time it's needed
 function buildModal() {
   modalEl = document.createElement("div");
-  modalEl.className = "modal fade";
+  modalEl.className = "modal fade confirm-modal";
   modalEl.tabIndex = -1;
   modalEl.setAttribute("aria-labelledby", "confirmTitle");
   modalEl.setAttribute("aria-hidden", "true");

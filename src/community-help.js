@@ -3,6 +3,7 @@ import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy, loadPublicAvatars, authorAvatar } from "/src/avatar.js";
 import { Modal } from "bootstrap";
+import { confirmDialog } from "/src/confirm-dialog.js";
 import {
   collection,
   getDoc,
@@ -25,7 +26,8 @@ const postList = document.querySelector("#postList");
 
 // full comment section (#commentModal), opened by tapping a post
 const commentModalEl = document.querySelector("#commentModal");
-const commentModal = Modal.getOrCreateInstance(commentModalEl);
+// focus: false, so its focus trap doesn't fight the delete confirm dialog opened on top of it
+const commentModal = Modal.getOrCreateInstance(commentModalEl, { focus: false });
 const commentPost = document.querySelector("#commentPost");
 const commentCount = document.querySelector("#commentCount");
 const commentInput = document.querySelector("#commentInput");
@@ -145,7 +147,11 @@ function createAvatarImg(uid, savedCopy, size) {
 }
 
 async function deletePost(id, deleteBtn) {
-  if (!confirm("Delete this post?")) return;
+  const ok = await confirmDialog({
+    title: "Delete this post?",
+    message: "Its comments and ratings will be deleted too. This can't be undone.",
+  });
+  if (!ok) return;
 
   deleteBtn.disabled = true;
   try {
@@ -272,8 +278,21 @@ async function saveComment() {
   }
 }
 
+// closing the confirm dialog unlocks page scrolling, but the comment section may still be open
+function keepPageLocked() {
+  if (commentModalEl.classList.contains("show")) {
+    document.body.classList.add("modal-open");
+    document.body.style.overflow = "hidden";
+  }
+}
+
 async function deleteComment(comment) {
-  if (!confirm("Delete this comment?")) return;
+  const ok = await confirmDialog({
+    title: "Delete this comment?",
+    message: "This can't be undone.",
+  });
+  keepPageLocked();
+  if (!ok) return;
 
   // if it's your last comment on the post, remove your whole entry instead of leaving {}
   const myCount = comments.filter(
