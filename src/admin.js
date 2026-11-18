@@ -36,7 +36,6 @@ const USER_SUBCOLLECTIONS = ["linkChecks", "postedReports", "postedHelp", "saved
 // "Other data" tab: whole collections, and per-user subcollections read with collectionGroup
 const OTHER_SOURCES = [
   { key: "publicProfiles", label: "publicProfiles" },
-  { key: "users/*/linkChecks", label: "users/*/linkChecks" },
   { key: "users/*/postedReports", label: "users/*/postedReports" },
   { key: "users/*/postedHelp", label: "users/*/postedHelp" },
   { key: "links", label: "links (no longer used)" },
@@ -70,9 +69,10 @@ function plural(n, word) {
   return n + " " + word + (n === 1 ? "" : "s");
 }
 
-// newest first; older docs used last_updated
+// newest first; link checks use checkedAt, older docs used last_updated
 function newestFirst(docs) {
-  const time = (d) => (d.data().createdAt ?? d.data().last_updated)?.toMillis?.() ?? 0;
+  const time = (d) =>
+    (d.data().createdAt ?? d.data().checkedAt ?? d.data().last_updated)?.toMillis?.() ?? 0;
   return [...docs].sort((a, b) => time(b) - time(a));
 }
 
@@ -167,12 +167,37 @@ async function loadUsers() {
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
+// is this doc in a users/{uid}/... subcollection (not an old top-level collection)?
+function underUsers(d) {
+  return d.ref.parent.parent?.parent.id === "users";
+}
+
+// every user's users/{uid}/linkChecks, with who checked it
+async function loadLinkChecks() {
+  const [checks, users] = await Promise.all([
+    getDocs(collectionGroup(db, "linkChecks")),
+    getDocs(collection(db, "users")),
+  ]);
+  const names = new Map(users.docs.map((d) => [d.id, d.data().name || d.data().email]));
+
+  return newestFirst(checks.docs.filter(underUsers)).map((d) => {
+    const check = d.data();
+    const uid = d.ref.parent.parent.id;
+    return {
+      path: d.ref.path,
+      ref: d.ref,
+      title: check.url || "(no url)",
+      meta: [check.result, names.get(uid) || uid, formatDate(check.checkedAt)].filter(Boolean).join(" · "),
+    };
+  });
+}
+
 async function loadOther(key) {
   let docs;
   if (key.startsWith("users/*/")) {
     // every subcollection with this name, but only the ones under users/{uid}
     const snapshot = await getDocs(collectionGroup(db, key.split("/")[2]));
-    docs = snapshot.docs.filter((d) => d.ref.parent.parent?.parent.id === "users");
+    docs = snapshot.docs.filter(underUsers);
   } else {
     docs = (await getDocs(collection(db, key))).docs;
   }
@@ -188,6 +213,7 @@ function loadCurrentTab() {
   if (tab === "helpPosts") return loadHelpPosts();
   if (tab === "scamReports") return loadReports();
   if (tab === "users") return loadUsers();
+  if (tab === "linkChecks") return loadLinkChecks();
   return loadOther(otherSourceEl.value);
 }
 

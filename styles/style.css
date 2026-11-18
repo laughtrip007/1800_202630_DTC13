@@ -244,3 +244,10 @@ a:focus-visible .feature-card {
 .help-post {
   cursor: pointer;
 }
+
+/* admin page tabs in the app's green instead of Bootstrap blue */
+.admin-tabs {
+  --bs-nav-link-color: var(--bs-success);
+  --bs-nav-link-hover-color: var(--bs-success-text-emphasis);
+  --bs-nav-pills-link-active-bg: var(--bs-success);
+}
