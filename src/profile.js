@@ -3,6 +3,7 @@ import { db } from "/src/firebase-config.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy } from "/src/avatar.js";
 import { createAvatarPicker } from "/src/avatar-picker.js";
+import { isAdmin } from "/src/admin-check.js";
 import {
   doc,
   getDoc,
@@ -143,10 +144,41 @@ async function loadLinkChecks(uid) {
   }
 }
 
+// which collection each saved map points to
+const SAVED_SOURCES = { savedReports: "scamReports", savedHelp: "helpPosts" };
+
+// A saved item is only a copy, so it stays after the post itself is deleted (by its
+// author or an admin). Drops those from the map, and from the user doc too.
+async function removeDeletedSaves(userRef, savedMap, field) {
+  const ids = Object.keys(savedMap || {});
+  const checks = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        return (await getDoc(doc(db, SAVED_SOURCES[field], id))).exists();
+      } catch {
+        return true; // couldn't check: keep it
+      }
+    }),
+  );
+  const gone = ids.filter((id, i) => !checks[i]);
+  if (gone.length === 0) return savedMap;
+
+  try {
+    await updateDoc(
+      userRef,
+      Object.fromEntries(gone.map((id) => [field + "." + id, deleteField()])),
+    );
+  } catch (error) {
+    console.error(`Error cleaning up ${field}:`, error);
+  }
+  return Object.fromEntries(Object.entries(savedMap).filter(([id]) => !gone.includes(id)));
+}
+
 // saved items are a map field on the user doc: { <id>: { title, text, href, savedAt } }
 // canUnsave: show a Save/Saved button on each item
-function showSaved(uid, savedMap, field, key, emptyMessage, canUnsave = false) {
+async function showSaved(uid, savedMap, field, key, emptyMessage, canUnsave = false) {
   const userRef = doc(db, "users", uid);
+  savedMap = await removeDeletedSaves(userRef, savedMap, field);
 
   // id = post/report id; data is kept so an unsave can be undone (same savedAt, same order)
   const items = Object.entries(savedMap || {})
@@ -199,6 +231,10 @@ onAuthReady(async (user) => {
 
   loadLinkChecks(user.uid);
 
+  isAdmin(user.uid).then((admin) => {
+    document.querySelector("#adminLink").classList.toggle("d-none", !admin);
+  });
+
   // one read gives the name, the avatar and both saved lists
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -207,7 +243,7 @@ onAuthReady(async (user) => {
       data.name || user.displayName || "SafeLink user";
     setUpAvatar(user.uid, avatarCopy(data.avatar));
 
-    showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.");
+    showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.", true);
     showSaved(user.uid, data.savedHelp, "savedHelp", "help", "No saved help pages yet.", true);
   } catch (error) {
     console.error("Error loading profile:", error);

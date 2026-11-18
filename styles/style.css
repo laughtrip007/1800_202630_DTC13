@@ -239,3 +239,28 @@ a:focus-visible .feature-card {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* community help: tapping a post opens its comments */
+.help-post {
+  cursor: pointer;
+}
+
+/* admin page tabs in the app's green instead of Bootstrap blue */
+.admin-tabs {
+  --bs-nav-link-color: var(--bs-success);
+  --bs-nav-link-hover-color: var(--bs-success-text-emphasis);
+  --bs-nav-pills-link-active-bg: var(--bs-success);
+}
+
+/* confirm dialog opened on top of another modal (e.g. deleting a comment) */
+.confirm-modal {
+  z-index: 1065;
+}
+.modal-backdrop ~ .modal-backdrop {
+  z-index: 1060;
+}
+
+/* scam reports sort: rounded green segmented control */
+.sort-options .btn {
+  --bs-btn-border-radius: 999px;
+}
