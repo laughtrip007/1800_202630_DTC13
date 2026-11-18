@@ -2,6 +2,7 @@ import { db } from "/src/firebase-config.js";
 import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
 import { avatarSrc, avatarCopy, loadPublicAvatars, authorAvatar } from "/src/avatar.js";
+import { Modal } from "bootstrap";
 import {
   collection,
   getDoc,
@@ -22,9 +23,11 @@ const postBtn = document.querySelector("#postBtn");
 const questionInput = document.querySelector("#questionInput");
 const postList = document.querySelector("#postList");
 
-const commentPanel = document.querySelector("#commentPanel");
-const commentClose = document.querySelector("#commentClose");
-const commentQuestion = document.querySelector("#commentQuestion");
+// full comment section (#commentModal), opened by tapping a post
+const commentModalEl = document.querySelector("#commentModal");
+const commentModal = Modal.getOrCreateInstance(commentModalEl);
+const commentPost = document.querySelector("#commentPost");
+const commentCount = document.querySelector("#commentCount");
 const commentInput = document.querySelector("#commentInput");
 const commentBtn = document.querySelector("#commentBtn");
 const commentList = document.querySelector("#commentList");
@@ -34,6 +37,7 @@ let posts = [];
 let ratings = [];
 let comments = [];
 let openPostId = null;
+let previewIds = new Set(); // posts showing their latest comments under the card
 let savedIds = new Set();
 let myAvatar = null; // copied into my new posts and comments
 
@@ -162,6 +166,7 @@ async function deletePost(id, deleteBtn) {
   posts = posts.filter((post) => post.id !== id);
   comments = comments.filter((c) => c.postId !== id);
   ratings = ratings.filter((r) => r.postId !== id);
+  previewIds.delete(id);
   if (openPostId === id) closeComments();
   renderPosts();
 }
@@ -204,24 +209,19 @@ async function saveRating(postId, stars) {
   }
 }
 
-function openComments(postId, post) {
+// opens the full comment section for a post (fullscreen on phones)
+function openComments(postId, focusInput = false) {
   if (postId !== openPostId) commentInput.value = "";
   openPostId = postId;
-  commentQuestion.textContent = post.question;
-
-  // keep the panel between the top navbar and the bottom nav
-  const navbar = document.querySelector("site-navbar nav");
-  const bottomNav = document.querySelector(".bottom-nav");
-  commentPanel.style.top = Math.max(0, navbar.getBoundingClientRect().bottom) + "px";
-  commentPanel.style.bottom = bottomNav.offsetHeight + "px";
-
-  commentPanel.classList.remove("d-none");
   showComments();
+  if (focusInput) {
+    commentModalEl.addEventListener("shown.bs.modal", () => commentInput.focus(), { once: true });
+  }
+  commentModal.show();
 }
 
 function closeComments() {
-  openPostId = null;
-  commentPanel.classList.add("d-none");
+  commentModal.hide();
 }
 
 async function saveComment() {
@@ -296,7 +296,15 @@ async function deleteComment(comment) {
   }
 }
 
-function createCommentCard(comment) {
+// newest first
+function commentsFor(postId) {
+  return comments
+    .filter((c) => c.postId === postId)
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+}
+
+// compact = the short version under a post card (2 lines, no delete button)
+function createCommentCard(comment, compact = false) {
   const card = document.createElement("div");
   card.className = "border-start border-success border-3 ps-3 mb-3";
 
@@ -315,14 +323,14 @@ function createCommentCard(comment) {
   header.append(createAvatarImg(comment.userID, comment.userAvatar, 24), author, time);
 
   const text = document.createElement("p");
-  text.className = "mb-1";
+  text.className = compact ? "mb-0 text-truncate-2" : "mb-1";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = comment.text;
 
   card.append(header, text);
 
   // only the owner can delete
-  if (currentUser !== null && comment.userID === currentUser.uid) {
+  if (!compact && currentUser !== null && comment.userID === currentUser.uid) {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "btn btn-link btn-sm text-danger p-0";
@@ -334,16 +342,24 @@ function createCommentCard(comment) {
   return card;
 }
 
-// fills the side panel with the comments of the open post (newest first)
+// fills the comment section: the post on top, then all its comments (newest first)
 function showComments() {
-  commentList.innerHTML = "";
+  const post = posts.find((p) => p.id === openPostId);
+  if (!post) {
+    closeComments();
+    return;
+  }
 
-  const postComments = comments
-    .filter((c) => c.postId === openPostId)
-    .sort(
-      (a, b) =>
-        (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0),
-    );
+  commentPost.innerHTML = "";
+  const text = document.createElement("p");
+  text.className = "fs-5 mb-0";
+  text.style.whiteSpace = "pre-wrap";
+  text.textContent = post.question;
+  commentPost.append(createPostHeader(post), text);
+
+  const postComments = commentsFor(openPostId);
+  commentCount.textContent = "Comments (" + postComments.length + ")";
+  commentList.innerHTML = "";
 
   if (postComments.length === 0) {
     const p = document.createElement("p");
@@ -353,9 +369,33 @@ function showComments() {
     return;
   }
 
-  postComments.forEach((comment) =>
-    commentList.appendChild(createCommentCard(comment)),
-  );
+  postComments.forEach((comment) => commentList.appendChild(createCommentCard(comment)));
+}
+
+// the latest 3 comments under a post card, shown by the Comments button
+function createCommentPreview(postId) {
+  const box = document.createElement("div");
+  box.className = "border-top mt-3 pt-3";
+
+  const postComments = commentsFor(postId);
+  if (postComments.length === 0) {
+    const p = document.createElement("p");
+    p.className = "text-body-secondary small mb-2";
+    p.textContent = "No comments yet.";
+    box.appendChild(p);
+  }
+  postComments.slice(0, 3).forEach((comment) => box.appendChild(createCommentCard(comment, true)));
+
+  // more than 3: open the full list; otherwise go straight to writing one
+  const more = document.createElement("button");
+  more.type = "button";
+  more.className = "btn btn-link btn-sm text-success fw-semibold p-0";
+  more.textContent =
+    postComments.length > 3 ? "View all " + postComments.length + " comments" : "Write a comment";
+  more.addEventListener("click", () => openComments(postId, postComments.length <= 3));
+  box.appendChild(more);
+
+  return box;
 }
 
 // fades the "tap again to remove" hint in, then out after 3s
@@ -454,15 +494,8 @@ function createRatingSection(postId) {
   return section;
 }
 
-function createPostCard(post, id) {
-  const card = document.createElement("div");
-  card.className = "card border-0 shadow-sm mb-3";
-  card.id = "post-" + id;
-
-  const body = document.createElement("div");
-  body.className = "card-body";
-
-  // avatar + name + time
+// avatar + name + time, used on the card and at the top of the comment section
+function createPostHeader(post) {
   const header = document.createElement("div");
   header.className = "d-flex align-items-center gap-2 mb-2";
 
@@ -478,6 +511,30 @@ function createPostCard(post, id) {
   const nameAndTime = document.createElement("div");
   nameAndTime.append(author, time);
   header.append(createAvatarImg(post.ownerId, post.ownerAvatar, 40), nameAndTime);
+  return header;
+}
+
+// redraws one card (e.g. after opening its comment preview) without touching the others
+function refreshPostCard(post) {
+  const old = document.getElementById("post-" + post.id);
+  if (old) old.replaceWith(createPostCard(post, post.id));
+}
+
+function createPostCard(post, id) {
+  const card = document.createElement("div");
+  card.className = "card border-0 shadow-sm mb-3 help-post";
+  card.id = "post-" + id;
+
+  // tapping the post (not its buttons) opens the full comment section
+  card.addEventListener("click", (e) => {
+    if (e.target.closest("button, a")) return;
+    openComments(id);
+  });
+
+  const body = document.createElement("div");
+  body.className = "card-body";
+
+  const header = createPostHeader(post);
 
   const text = document.createElement("p");
   text.className = "card-text mb-0";
@@ -487,12 +544,19 @@ function createPostCard(post, id) {
   const buttons = document.createElement("div");
   buttons.className = "d-flex gap-2 mt-3";
 
-  const commentCount = comments.filter((c) => c.postId === id).length;
+  // shows or hides the latest comments under the card
+  const count = comments.filter((c) => c.postId === id).length;
+  const previewOpen = previewIds.has(id);
   const commentsBtn = document.createElement("button");
   commentsBtn.type = "button";
-  commentsBtn.className = "btn btn-outline-success btn-sm";
-  commentsBtn.textContent = "Comments (" + commentCount + ")";
-  commentsBtn.addEventListener("click", () => openComments(id, post));
+  commentsBtn.className = previewOpen ? "btn btn-success btn-sm" : "btn btn-outline-success btn-sm";
+  commentsBtn.textContent = "Comments (" + count + ")";
+  commentsBtn.setAttribute("aria-expanded", previewOpen);
+  commentsBtn.addEventListener("click", () => {
+    if (previewOpen) previewIds.delete(id);
+    else previewIds.add(id);
+    refreshPostCard(post);
+  });
   buttons.appendChild(commentsBtn);
 
   const saveBtn = createSaveButton(savedIds.has(id));
@@ -510,6 +574,7 @@ function createPostCard(post, id) {
   }
 
   body.append(header, text, createRatingSection(id), buttons);
+  if (previewOpen) body.appendChild(createCommentPreview(id));
   card.appendChild(body);
   return card;
 }
@@ -652,5 +717,7 @@ postForm.addEventListener("submit", async (e) => {
   }
 });
 
-commentClose.addEventListener("click", closeComments);
+commentModalEl.addEventListener("hidden.bs.modal", () => {
+  openPostId = null;
+});
 commentBtn.addEventListener("click", saveComment);

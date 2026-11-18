@@ -239,3 +239,8 @@ a:focus-visible .feature-card {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* community help: tapping a post opens its comments */
+.help-post {
+  cursor: pointer;
+}
