@@ -57,20 +57,23 @@ function init() {
 
   document.querySelector("#resultDescription").textContent = info.description;
 
-  // Save to history once, and never save unverified results
-  if (!localStorage.getItem("resultSaved") && !UNSAVED_RESULTS.includes(result)) {
+  // Save to history once, and never save unverified or not-found results
+  if (
+    !localStorage.getItem("resultSaved") &&
+    !UNSAVED_RESULTS.includes(result)
+  ) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       unsubscribe();
 
       if (!user) return;
 
       try {
-        // the user's own history
         await addDoc(collection(db, "users", user.uid, "linkChecks"), {
           url: checkedURL,
           result: result,
           checkedAt: serverTimestamp(),
         });
+
         localStorage.setItem("resultSaved", "true");
       } catch (error) {
         console.error("Error saving link check:", error);
