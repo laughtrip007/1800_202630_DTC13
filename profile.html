@@ -16,55 +16,96 @@
             <img id="profileAvatar" class="rounded-circle bg-white" src="images/default-avatar.svg" alt="" width="64" height="64" />
             <span class="avatar-edit-badge" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
           </button>
-          <div class="text-break">
-            <h1 id="profileName" class="h4 fw-bold mb-0">Loading…</h1>
+          <div class="text-break flex-grow-1">
+            <div class="d-flex align-items-center gap-2">
+              <h1 id="profileName" class="h4 fw-bold mb-0">Loading…</h1>
+              <button id="editNameBtn" type="button" class="btn btn-sm btn-link text-white p-0 opacity-75"
+                      aria-label="Edit your name" title="Edit your name">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+              </button>
+            </div>
             <p id="profileEmail" class="mb-0 opacity-75"></p>
             <p class="small mb-0 opacity-75">Member since <span id="profileSince"></span></p>
           </div>
         </div>
       </div>
 
-      <section class="accordion profile-accordion shadow-sm mb-4" id="profileLists">
+      <h2 class="profile-section-title">My Posts</h2>
+      <section class="accordion profile-accordion shadow-sm mb-4" id="myPosts">
         <div class="accordion-item">
-          <h2 class="accordion-header">
+          <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#myReportsPanel" aria-expanded="false" aria-controls="myReportsPanel">
+              <i class="bi bi-exclamation-triangle text-success me-2" aria-hidden="true"></i>
+              <span class="flex-grow-1">My Scam Reports</span>
+              <span id="myReportsCount" class="badge rounded-pill text-bg-success me-2">–</span>
+            </button>
+          </h3>
+          <div id="myReportsPanel" class="accordion-collapse collapse" data-bs-parent="#myPosts">
+            <div id="myReportsList" class="accordion-body profile-list">
+              <p class="text-body-secondary mb-0">Loading…</p>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h3 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#myHelpPanel" aria-expanded="false" aria-controls="myHelpPanel">
+              <i class="bi bi-question-circle text-success me-2" aria-hidden="true"></i>
+              <span class="flex-grow-1">My Questions</span>
+              <span id="myHelpCount" class="badge rounded-pill text-bg-success me-2">–</span>
+            </button>
+          </h3>
+          <div id="myHelpPanel" class="accordion-collapse collapse" data-bs-parent="#myPosts">
+            <div id="myHelpList" class="accordion-body profile-list">
+              <p class="text-body-secondary mb-0">Loading…</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="profile-section-title">History &amp; Saved</h2>
+      <section class="accordion profile-accordion shadow-sm mb-4" id="historyLists">
+        <div class="accordion-item">
+          <h3 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#checksPanel" aria-expanded="false" aria-controls="checksPanel">
               <i class="bi bi-link-45deg text-success me-2" aria-hidden="true"></i>
               <span class="flex-grow-1">Links Checked</span>
               <span id="checksCount" class="badge rounded-pill text-bg-success me-2">–</span>
             </button>
-          </h2>
-          <div id="checksPanel" class="accordion-collapse collapse" data-bs-parent="#profileLists">
+          </h3>
+          <div id="checksPanel" class="accordion-collapse collapse" data-bs-parent="#historyLists">
             <div id="checksList" class="accordion-body profile-list">
               <p class="text-body-secondary mb-0">Loading…</p>
             </div>
           </div>
         </div>
         <div class="accordion-item">
-          <h2 class="accordion-header">
+          <h3 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#reportsPanel" aria-expanded="false" aria-controls="reportsPanel">
               <i class="bi bi-bookmark text-success me-2" aria-hidden="true"></i>
               <span class="flex-grow-1">Saved Scam Reports</span>
               <span id="reportsCount" class="badge rounded-pill text-bg-success me-2">–</span>
             </button>
-          </h2>
-          <div id="reportsPanel" class="accordion-collapse collapse" data-bs-parent="#profileLists">
+          </h3>
+          <div id="reportsPanel" class="accordion-collapse collapse" data-bs-parent="#historyLists">
             <div id="reportsList" class="accordion-body profile-list">
               <p class="text-body-secondary mb-0">Loading…</p>
             </div>
           </div>
         </div>
         <div class="accordion-item">
-          <h2 class="accordion-header">
+          <h3 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#helpPanel" aria-expanded="false" aria-controls="helpPanel">
               <i class="bi bi-chat-left-text text-success me-2" aria-hidden="true"></i>
               <span class="flex-grow-1">Saved Help Pages</span>
               <span id="helpCount" class="badge rounded-pill text-bg-success me-2">–</span>
             </button>
-          </h2>
-          <div id="helpPanel" class="accordion-collapse collapse" data-bs-parent="#profileLists">
+          </h3>
+          <div id="helpPanel" class="accordion-collapse collapse" data-bs-parent="#historyLists">
             <div id="helpList" class="accordion-body profile-list">
               <p class="text-body-secondary mb-0">Loading…</p>
             </div>
@@ -84,6 +125,27 @@
         <button id="logoutBtn" type="button" class="btn btn-outline-danger btn-lg">Log Out</button>
       </div>
     </main>
+
+    <!-- Edit name (src/profile.js) -->
+    <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <form id="nameForm" class="modal-content border-0 shadow" novalidate>
+          <div class="modal-header border-0 pb-0">
+            <h2 id="nameModalTitle" class="modal-title h5 fw-bold">Edit your name</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="nameInput" class="form-label">Name shown on your posts and comments</label>
+            <input id="nameInput" type="text" class="form-control" maxlength="50" autocomplete="name" required />
+            <p id="nameError" class="text-danger small mt-2 mb-0" role="alert" hidden></p>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="nameSave" type="submit" class="btn btn-success">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Profile picture picker (src/avatar-picker.js) -->
     <div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="avatarModalTitle" aria-hidden="true">

@@ -141,6 +141,15 @@ a:focus-visible .feature-card {
 }
 
 /* profile lists */
+.profile-section-title {
+  margin: 0 0 0.5rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
 .profile-accordion {
   --bs-accordion-active-bg: #d1e7dd;
   --bs-accordion-active-color: #0f5132;

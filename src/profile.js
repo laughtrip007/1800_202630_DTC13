@@ -1,9 +1,18 @@
 import { onAuthReady, logoutUser } from "/src/authentication.js";
 import { db } from "/src/firebase-config.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
-import { avatarSrc, avatarCopy } from "/src/avatar.js";
+import { avatarSrc } from "/src/avatar.js";
 import { createAvatarPicker } from "/src/avatar-picker.js";
 import { isAdmin } from "/src/admin-check.js";
+import { formatDate } from "/src/format.js";
+import {
+  DEFAULT_NAME,
+  MAX_NAME_LENGTH,
+  profileFromUserData,
+  syncPublicProfile,
+} from "/src/public-profile.js";
+import { Modal } from "bootstrap";
+import { updateProfile } from "firebase/auth";
 import {
   doc,
   getDoc,
@@ -12,17 +21,18 @@ import {
   collection,
   query,
   orderBy,
+  limit,
   getDocs,
+  getCountFromServer,
+  writeBatch,
 } from "firebase/firestore";
 
 // data layout: see FIRESTORE.md
 // saved items: savedReports / savedHelp map fields on users/{uid}
 // link checks: users/{uid}/linkChecks
+// my posts: users/{uid}/postedReports and postedHelp
 
-function formatDate(timestamp) {
-  const date = timestamp?.toDate?.();
-  return date ? date.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" }) : "";
-}
+const CHECKS_SHOWN = 20; // link checks listed before "Show all"
 
 function renderList(key, items, emptyMessage, buildItem) {
   document.querySelector(`#${key}Count`).textContent = items.length;
@@ -132,15 +142,66 @@ function buildSavedItem(item, onToggle) {
   return row;
 }
 
-async function loadLinkChecks(uid) {
+// latest 20 link checks (all of them after "Show all"); the badge shows the total
+async function loadLinkChecks(uid, showAll = false) {
   try {
-    const q = query(collection(db, "users", uid, "linkChecks"), orderBy("checkedAt", "desc"));
-    const snapshot = await getDocs(q);
+    const checksRef = collection(db, "users", uid, "linkChecks");
+    const newestFirst = [orderBy("checkedAt", "desc")];
+    if (!showAll) newestFirst.push(limit(CHECKS_SHOWN));
+    const [countSnap, snapshot] = await Promise.all([
+      getCountFromServer(checksRef),
+      getDocs(query(checksRef, ...newestFirst)),
+    ]);
     const checks = snapshot.docs.map((d) => d.data());
+    const total = countSnap.data().count;
+
     renderList("checks", checks, "You haven't checked any links yet.", buildCheckItem);
+    document.querySelector("#checksCount").textContent = total;
+
+    if (total > checks.length) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "btn btn-link btn-sm text-success fw-semibold px-0 mt-2";
+      more.textContent = "Show all " + total;
+      more.addEventListener("click", () => {
+        more.disabled = true;
+        loadLinkChecks(uid, true);
+      });
+      document.querySelector("#checksList").appendChild(more);
+    }
   } catch (error) {
     console.error("Error loading link checks:", error);
     showError("checks");
+  }
+}
+
+// one thing I posted (from postedReports / postedHelp): title linking to it, and the date
+function buildPostedItem(item) {
+  const row = document.createElement("div");
+  row.className = "list-group-item list-group-item-action px-0 position-relative";
+
+  const title = document.createElement("a");
+  title.className = "fw-semibold d-block text-reset text-decoration-none stretched-link text-break";
+  title.href = fixOldHref(item.href || "#");
+  title.textContent = item.title || "Untitled";
+
+  const date = document.createElement("small");
+  date.className = "text-body-secondary";
+  date.textContent = item.createdAt ? "Posted " + formatDate(item.createdAt) : "";
+
+  row.append(title, date);
+  return row;
+}
+
+// my reports or questions, newest first
+async function loadPosted(uid, subcollection, key, emptyMessage) {
+  try {
+    const q = query(collection(db, "users", uid, subcollection), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    renderList(key, snapshot.docs.map((d) => d.data()), emptyMessage, buildPostedItem);
+  } catch (error) {
+    console.error(`Error loading ${subcollection}:`, error);
+    showError(key);
   }
 }
 
@@ -221,6 +282,60 @@ function setUpAvatar(uid, initialAvatar) {
   show(initialAvatar);
 }
 
+// name: users/{uid}.name, publicProfiles/{uid}.name (so posts show it) and the login's displayName
+function setUpNameEditor(user, initialName) {
+  const nameEl = document.querySelector("#profileName");
+  const modalEl = document.querySelector("#nameModal");
+  const modal = Modal.getOrCreateInstance(modalEl);
+  const form = document.querySelector("#nameForm");
+  const input = document.querySelector("#nameInput");
+  const errorEl = document.querySelector("#nameError");
+  const saveBtn = document.querySelector("#nameSave");
+  let name = initialName;
+
+  function showNameError(text) {
+    errorEl.textContent = text;
+    errorEl.hidden = !text;
+  }
+
+  document.querySelector("#editNameBtn").addEventListener("click", () => {
+    input.value = name;
+    showNameError("");
+    modal.show();
+  });
+  modalEl.addEventListener("shown.bs.modal", () => input.focus());
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const newName = input.value.trim().replace(/\s+/g, " ");
+    if (newName === "") {
+      showNameError("Please enter a name.");
+      return;
+    }
+    if (newName.length > MAX_NAME_LENGTH) {
+      showNameError(`Please keep it under ${MAX_NAME_LENGTH} characters.`);
+      return;
+    }
+
+    saveBtn.disabled = true;
+    try {
+      const batch = writeBatch(db);
+      batch.set(doc(db, "users", user.uid), { name: newName }, { merge: true });
+      batch.set(doc(db, "publicProfiles", user.uid), { name: newName }, { merge: true });
+      await batch.commit();
+      await updateProfile(user, { displayName: newName });
+      name = newName;
+      nameEl.textContent = newName;
+      modal.hide();
+    } catch (error) {
+      console.error("Error saving name:", error);
+      showNameError("Could not save your name. Please try again.");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+}
+
 onAuthReady(async (user) => {
   if (!user) return;
 
@@ -230,6 +345,8 @@ onAuthReady(async (user) => {
   ).toLocaleDateString("en-CA", { year: "numeric", month: "long", day: "numeric" });
 
   loadLinkChecks(user.uid);
+  loadPosted(user.uid, "postedReports", "myReports", "You haven't reported any scams yet.");
+  loadPosted(user.uid, "postedHelp", "myHelp", "You haven't asked any questions yet.");
 
   isAdmin(user.uid).then((admin) => {
     document.querySelector("#adminLink").classList.toggle("d-none", !admin);
@@ -239,15 +356,22 @@ onAuthReady(async (user) => {
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     const data = userDoc.data() || {};
-    document.querySelector("#profileName").textContent =
-      data.name || user.displayName || "SafeLink user";
-    setUpAvatar(user.uid, avatarCopy(data.avatar));
+    const profile = profileFromUserData(data);
+    document.querySelector("#profileName").textContent = profile.name;
+    setUpNameEditor(user, profile.name);
+    setUpAvatar(user.uid, profile.avatar);
+
+    // make sure everyone sees my current name and picture on my posts (fixes older accounts)
+    syncPublicProfile(user.uid, profile).catch((error) =>
+      console.error("Error updating public profile:", error),
+    );
 
     showSaved(user.uid, data.savedReports, "savedReports", "reports", "No saved scam reports yet.", true);
     showSaved(user.uid, data.savedHelp, "savedHelp", "help", "No saved help pages yet.", true);
   } catch (error) {
     console.error("Error loading profile:", error);
-    document.querySelector("#profileName").textContent = user.displayName || "SafeLink user";
+    document.querySelector("#profileName").textContent = user.displayName || DEFAULT_NAME;
+    document.querySelector("#editNameBtn").classList.add("d-none");
     setUpAvatar(user.uid, null);
     showError("reports");
     showError("help");

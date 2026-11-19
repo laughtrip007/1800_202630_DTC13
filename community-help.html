@@ -30,6 +30,7 @@
               id="questionInput"
               class="form-control form-control-lg mb-3"
               rows="4"
+              maxlength="1000"
               placeholder="Not sure if something is a scam? Ask here."
             ></textarea>
             <div class="d-grid">
@@ -42,6 +43,9 @@
       <h2 class="h4 fw-bold mb-3">Recent Questions</h2>
       <div id="postList">
         <p class="text-body-secondary text-center">Loading…</p>
+      </div>
+      <div class="d-grid mb-4">
+        <button id="loadMoreBtn" type="button" class="btn btn-outline-success d-none">Load more</button>
       </div>
     </main>
 
@@ -68,6 +72,7 @@
                 id="commentInput"
                 class="form-control"
                 rows="2"
+                maxlength="1000"
                 placeholder="Write a comment..."
                 aria-label="Write a comment"
               ></textarea>

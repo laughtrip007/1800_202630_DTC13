@@ -19,6 +19,7 @@ import {
   updateProfile,
   onAuthStateChanged,
   signOut,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 
 // -------------------------------------------------------------
@@ -75,6 +76,8 @@ export async function signupUser(name, email, password) {
       country: "Canada", // Default value
       school: "BCIT", // Default value
     });
+    // the public part (name + picture) that posts show, see src/public-profile.js
+    await setDoc(doc(db, "publicProfiles", user.uid), { name: name, avatar: null });
     console.log("Firestore user document created successfully!");
   } catch (error) {
     // Information for debugging: show the error code
@@ -88,6 +91,15 @@ export async function signupUser(name, email, password) {
   }
   // Return the user object for further use (e.g., redirecting or showing a welcome message)
   return user;
+}
+
+// -------------------------------------------------------------
+// resetPassword(email)
+// -------------------------------------------------------------
+// Emails a "reset your password" link. Firebase doesn't say whether
+// the account exists, so the page shows the same message either way.
+export async function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email);
 }
 
 // -------------------------------------------------------------

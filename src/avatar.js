@@ -1,11 +1,9 @@
 // Avatars are { shape, color } (see FIRESTORE.md).
 // The user's own avatar is the `avatar` field on users/{uid}, which only they can read.
-// It's also kept in publicProfiles/{uid}, which anyone signed in can read, so posts and
-// comments always show the author's current picture. The copy saved in each post
-// (ownerAvatar / userAvatar) is only used when the author has no publicProfiles doc yet.
+// It's also kept in publicProfiles/{uid} so everyone sees it on posts (see public-profile.js).
 // No avatar means the default icon.
 import { db } from "/src/firebase-config.js";
-import { doc, getDoc, writeBatch, deleteField } from "firebase/firestore";
+import { doc, writeBatch, deleteField } from "firebase/firestore";
 
 export const DEFAULT_AVATAR = "images/default-avatar.svg";
 
@@ -101,16 +99,11 @@ export function avatarCopy(avatar) {
   return avatar?.shape ? { shape: avatar.shape, color: avatar.color } : null;
 }
 
-export async function loadAvatar(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  return avatarCopy(snap.data()?.avatar);
-}
-
-// saves to users/{uid} (merge, so the rest of the doc is kept) and publicProfiles/{uid}
+// saves to users/{uid} and publicProfiles/{uid}; merge keeps the other fields (like name)
 export async function saveAvatar(uid, avatar) {
   const batch = writeBatch(db);
   batch.set(doc(db, "users", uid), { avatar: avatarCopy(avatar) }, { merge: true });
-  batch.set(doc(db, "publicProfiles", uid), { avatar: avatarCopy(avatar) });
+  batch.set(doc(db, "publicProfiles", uid), { avatar: avatarCopy(avatar) }, { merge: true });
   await batch.commit();
 }
 
@@ -118,32 +111,6 @@ export async function saveAvatar(uid, avatar) {
 export async function removeAvatar(uid) {
   const batch = writeBatch(db);
   batch.update(doc(db, "users", uid), { avatar: deleteField() });
-  batch.set(doc(db, "publicProfiles", uid), { avatar: null });
+  batch.set(doc(db, "publicProfiles", uid), { avatar: null }, { merge: true });
   await batch.commit();
-}
-
-// current avatars from publicProfiles, read once per page and kept here
-const publicAvatars = new Map(); // uid -> avatar (or null), only users who have a doc
-const checkedUids = new Set();
-
-// call before drawing posts; uids can repeat or be missing (older posts)
-export async function loadPublicAvatars(uids) {
-  const todo = [...new Set(uids)].filter((uid) => uid && !checkedUids.has(uid));
-  await Promise.all(
-    todo.map(async (uid) => {
-      try {
-        const snap = await getDoc(doc(db, "publicProfiles", uid));
-        checkedUids.add(uid);
-        if (snap.exists()) publicAvatars.set(uid, avatarCopy(snap.data().avatar));
-      } catch (error) {
-        // e.g. rules not updated yet: fall back to the copy in the post
-        console.error("Error loading avatar:", error);
-      }
-    }),
-  );
-}
-
-// the author's current avatar, or the copy saved in the post if we don't have one
-export function authorAvatar(uid, savedCopy) {
-  return publicAvatars.has(uid) ? publicAvatars.get(uid) : savedCopy;
 }
