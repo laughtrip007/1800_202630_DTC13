@@ -1,6 +1,8 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "firebase/firestore";
-import { avatarSrc, loadPublicAvatars, authorAvatar } from "./avatar.js";
+import { avatarSrc } from "./avatar.js";
+import { loadPublicProfiles, authorAvatar, authorName } from "./public-profile.js";
+import { formatDate } from "./format.js";
 import { onAuthReady } from "./authentication.js";
 import { createSaveButton, setSaveLook } from "./save-button.js";
 import { loadSavedIds, setSaved } from "./saved.js";
@@ -13,6 +15,7 @@ let allReports = []; // { id, data } so "I've seen this" can update data.seenBy 
 let sortBy = "newest";
 let currentUser = null;
 let savedIds = new Set(); // reports I saved (users/{uid}.savedReports)
+let loaded = false; // reports have been read; until then the list keeps "Loading…" or the error
 
 onAuthReady(async (user) => {
   currentUser = user;
@@ -68,25 +71,14 @@ async function toggleSeen(id, report, seenBtn) {
   }
 }
 
-// older reports used username/message instead of ownerName/details
+// older reports used owner/username/message instead of ownerId/ownerName/details.
+// The name is the author's current one (publicProfiles), or the copy in the report.
 function reportFields(report) {
   return {
-    name: report.ownerName || report.username || "Anonymous",
+    name: authorName(report.ownerId || report.owner, report.ownerName || report.username),
     query: report.query || "Untitled report",
     details: report.details || report.message || "",
   };
-}
-
-// shows the date like "Nov 16, 2026"
-function formatDate(timestamp) {
-  const date = timestamp?.toDate?.();
-  return date
-    ? date.toLocaleDateString("en-CA", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "";
 }
 
 function createReportCard(id, report) {
@@ -104,7 +96,7 @@ function createReportCard(id, report) {
 
   const avatar = document.createElement("img");
   avatar.className = "avatar rounded-circle flex-shrink-0";
-  avatar.src = avatarSrc(authorAvatar(report.ownerId, report.ownerAvatar));
+  avatar.src = avatarSrc(authorAvatar(report.ownerId || report.owner, report.ownerAvatar));
   avatar.alt = "";
   avatar.width = 40;
   avatar.height = 40;
@@ -152,6 +144,8 @@ function createReportCard(id, report) {
 
 // shows the reports that contain the keyword (all of them if the box is empty)
 function showReports() {
+  // auth can finish first: don't show "No reports yet" (or hide an error) before the list arrives
+  if (!loaded) return;
   const keyword = searchInput.value.trim().toLowerCase();
 
   const reports = allReports.filter((r) => {
@@ -186,8 +180,9 @@ async function loadReports() {
     allReports = snapshot.docs
       .sort((a, b) => time(b) - time(a))
       .map((d) => ({ id: d.id, data: d.data() }));
-    await loadPublicAvatars(allReports.map((r) => r.data.ownerId));
+    await loadPublicProfiles(allReports.map((r) => r.data.ownerId || r.data.owner));
 
+    loaded = true;
     showReports();
   } catch (error) {
     console.error("Error loading reports:", error);

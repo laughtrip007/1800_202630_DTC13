@@ -1,28 +1,42 @@
 import { db } from "/src/firebase-config.js";
 import { onAuthReady } from "/src/authentication.js";
 import { createSaveButton, setSaveLook } from "/src/save-button.js";
-import { avatarSrc, avatarCopy, loadPublicAvatars, authorAvatar } from "/src/avatar.js";
+import { avatarSrc } from "/src/avatar.js";
+import {
+  DEFAULT_NAME,
+  profileFromUserData,
+  setPublicProfile,
+  loadPublicProfiles,
+  authorAvatar,
+  authorName,
+} from "/src/public-profile.js";
+import { setSaved } from "/src/saved.js";
+import { formatTime, formatFullTime } from "/src/format.js";
 import { Modal } from "bootstrap";
 import { confirmDialog } from "/src/confirm-dialog.js";
 import {
   collection,
   getDoc,
   getDocs,
-  setDoc,
-  updateDoc,
   writeBatch,
   deleteField,
   doc,
   query,
   orderBy,
+  limit,
+  startAfter,
   serverTimestamp,
   Timestamp,
+  updateDoc,
 } from "firebase/firestore";
+
+const PAGE_SIZE = 15; // posts per "Load more"
 
 const postForm = document.querySelector("#postForm");
 const postBtn = document.querySelector("#postBtn");
 const questionInput = document.querySelector("#questionInput");
 const postList = document.querySelector("#postList");
+const loadMoreBtn = document.querySelector("#loadMoreBtn");
 
 // full comment section (#commentModal), opened by tapping a post
 const commentModalEl = document.querySelector("#commentModal");
@@ -41,53 +55,14 @@ let comments = [];
 let openPostId = null;
 let previewIds = new Set(); // posts showing their latest comments under the card
 let savedIds = new Set();
-let myAvatar = null; // copied into my new posts and comments
+let myProfile = { name: DEFAULT_NAME, avatar: null }; // copied into my new posts and comments
+let lastPostDoc = null; // where the next page starts
+let hasMore = false;
 
 onAuthReady((user) => {
   currentUser = user;
   showPosts();
 });
-
-// shows "just now", "5 min ago", "3 hours ago", "2 days ago" or the date
-function formatTime(timestamp) {
-  const date = timestamp?.toDate?.();
-  if (!date) return "";
-
-  const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return minutes + " min ago";
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return hours + (hours === 1 ? " hour ago" : " hours ago");
-
-  const days = Math.floor(hours / 24);
-  if (days < 7) return days + (days === 1 ? " day ago" : " days ago");
-
-  return date.toLocaleDateString("en-CA", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-// full date and time, shown when you hover over the time
-function formatFullTime(timestamp) {
-  const date = timestamp?.toDate?.();
-  return date
-    ? date.toLocaleString("en-CA", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "";
-}
-
-// older posts kept the author's name in userID
-function authorName(post) {
-  return post.ownerName || post.userID || "Anonymous";
-}
 
 // older posts without ownerId can't be deleted (names aren't unique)
 function isOwner(post) {
@@ -96,7 +71,7 @@ function isOwner(post) {
 
 // ratings and comments are stored inside each post, grouped by user:
 //   ratings:  { uid: stars }
-//   comments: { uid: { commentId: { text, userName, createdAt } } }
+//   comments: { uid: { commentId: { text, userName, userAvatar, createdAt } } }
 // this turns them into flat lists so the rest of the page can filter by postId
 function readPostExtras() {
   ratings = [];
@@ -115,24 +90,34 @@ function readPostExtras() {
   });
 }
 
-// from my users/{uid} doc: which posts I saved (savedHelp keys) and my avatar
+// from my users/{uid} doc: which posts I saved (savedHelp keys), my name and avatar
 async function loadMyUserData() {
   if (currentUser === null) return;
   try {
     const data = (await getDoc(doc(db, "users", currentUser.uid))).data() || {};
     savedIds = new Set(Object.keys(data.savedHelp || {}));
-    myAvatar = avatarCopy(data.avatar);
+    myProfile = profileFromUserData(data);
   } catch (error) {
-    console.error("Error loading saved posts:", error);
+    console.error("Error loading my profile:", error);
     savedIds = new Set();
+    myProfile = { name: currentUser.displayName || DEFAULT_NAME, avatar: null };
   }
 }
 
-// my own picture comes from my users doc; anyone else's from publicProfiles,
+// my own name and picture come from my users doc; anyone else's from publicProfiles,
 // or the copy stored in the post or comment
+function isMe(uid) {
+  return currentUser !== null && uid === currentUser.uid;
+}
 function currentAvatar(uid, savedCopy) {
-  if (currentUser !== null && uid === currentUser.uid) return myAvatar;
-  return authorAvatar(uid, savedCopy);
+  return isMe(uid) ? myProfile.avatar : authorAvatar(uid, savedCopy);
+}
+function currentName(uid, savedName) {
+  return isMe(uid) ? myProfile.name : authorName(uid, savedName);
+}
+// older posts kept the author's name in userID
+function postAuthor(post) {
+  return currentName(post.ownerId, post.ownerName || post.userID);
 }
 
 // round author picture
@@ -161,9 +146,7 @@ async function deletePost(id, deleteBtn) {
     batch.delete(doc(db, "users", currentUser.uid, "postedHelp", id));
     await batch.commit();
   } catch (error) {
-    alert(
-      `Error deleting post:\n${error.code || ""}\n${error.message || error}`,
-    );
+    alert(`Error deleting post:\n${error.code || ""}\n${error.message || error}`);
     deleteBtn.disabled = false;
     return;
   }
@@ -209,9 +192,7 @@ async function saveRating(postId, stars) {
     renderPosts();
     showRatingHint(postId);
   } catch (error) {
-    alert(
-      `Error saving rating:\n${error.code || ""}\n${error.message || error}`,
-    );
+    alert(`Error saving rating:\n${error.code || ""}\n${error.message || error}`);
   }
 }
 
@@ -252,12 +233,16 @@ async function saveComment() {
     const commentId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const comment = {
       text: text,
-      userName: currentUser.displayName || currentUser.email,
-      userAvatar: myAvatar,
+      userName: myProfile.name,
+      userAvatar: myProfile.avatar,
     };
-    await updateDoc(doc(db, "helpPosts", postId), {
+    // the comment, plus my public name/avatar so everyone sees the current ones
+    const batch = writeBatch(db);
+    batch.update(doc(db, "helpPosts", postId), {
       ["comments." + uid + "." + commentId]: { ...comment, createdAt: serverTimestamp() },
     });
+    setPublicProfile(batch, uid, myProfile);
+    await batch.commit();
 
     comments.push({
       ...comment,
@@ -270,9 +255,7 @@ async function saveComment() {
     renderPosts();
     showComments();
   } catch (error) {
-    alert(
-      `Error saving comment:\n${error.code || ""}\n${error.message || error}`,
-    );
+    alert(`Error saving comment:\n${error.code || ""}\n${error.message || error}`);
   } finally {
     commentBtn.disabled = false;
   }
@@ -299,9 +282,7 @@ async function deleteComment(comment) {
     (c) => c.postId === comment.postId && c.userID === comment.userID,
   ).length;
   const path =
-    myCount === 1
-      ? "comments." + comment.userID
-      : "comments." + comment.userID + "." + comment.id;
+    myCount === 1 ? "comments." + comment.userID : "comments." + comment.userID + "." + comment.id;
 
   try {
     await updateDoc(doc(db, "helpPosts", comment.postId), { [path]: deleteField() });
@@ -309,9 +290,7 @@ async function deleteComment(comment) {
     renderPosts();
     showComments();
   } catch (error) {
-    alert(
-      `Error deleting comment:\n${error.code || ""}\n${error.message || error}`,
-    );
+    alert(`Error deleting comment:\n${error.code || ""}\n${error.message || error}`);
   }
 }
 
@@ -332,7 +311,7 @@ function createCommentCard(comment, compact = false) {
 
   const author = document.createElement("small");
   author.className = "fw-bold";
-  author.textContent = comment.userName || "Anonymous";
+  author.textContent = currentName(comment.userID, comment.userName);
 
   const time = document.createElement("small");
   time.className = "text-body-secondary";
@@ -342,14 +321,14 @@ function createCommentCard(comment, compact = false) {
   header.append(createAvatarImg(comment.userID, comment.userAvatar, 24), author, time);
 
   const text = document.createElement("p");
-  text.className = compact ? "mb-0 text-truncate-2" : "mb-1";
+  text.className = compact ? "mb-0 text-break text-truncate-2" : "mb-1 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = comment.text;
 
   card.append(header, text);
 
   // only the owner can delete
-  if (!compact && currentUser !== null && comment.userID === currentUser.uid) {
+  if (!compact && isMe(comment.userID)) {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "btn btn-link btn-sm text-danger p-0";
@@ -371,7 +350,7 @@ function showComments() {
 
   commentPost.innerHTML = "";
   const text = document.createElement("p");
-  text.className = "fs-5 mb-0";
+  text.className = "fs-5 mb-0 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = post.question;
   commentPost.append(createPostHeader(post), text);
@@ -432,9 +411,7 @@ function createRatingSection(postId) {
   let myStars = 0;
   postRatings.forEach((r) => {
     total += r.stars;
-    if (currentUser !== null && r.userID === currentUser.uid) {
-      myStars = r.stars;
-    }
+    if (isMe(r.userID)) myStars = r.stars;
   });
 
   const section = document.createElement("div");
@@ -449,11 +426,7 @@ function createRatingSection(postId) {
     const average = total / postRatings.length;
     const count = postRatings.length;
     summary.textContent =
-      "Rating: " +
-      average.toFixed(1) +
-      " / 5 (" +
-      count +
-      (count === 1 ? " rating)" : " ratings)");
+      "Rating: " + average.toFixed(1) + " / 5 (" + count + (count === 1 ? " rating)" : " ratings)");
   }
   const summaryText = summary.textContent;
 
@@ -520,7 +493,7 @@ function createPostHeader(post) {
 
   const author = document.createElement("h3");
   author.className = "h6 fw-bold card-title mb-0";
-  author.textContent = authorName(post);
+  author.textContent = postAuthor(post);
 
   const time = document.createElement("small");
   time.className = "text-body-secondary d-block";
@@ -556,7 +529,7 @@ function createPostCard(post, id) {
   const header = createPostHeader(post);
 
   const text = document.createElement("p");
-  text.className = "card-text mb-0";
+  text.className = "card-text mb-0 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = post.question;
 
@@ -601,6 +574,7 @@ function createPostCard(post, id) {
 // draws the post list from the data already loaded (no Firestore reads)
 function renderPosts() {
   postList.innerHTML = "";
+  loadMoreBtn.classList.toggle("d-none", !hasMore);
 
   if (posts.length === 0) {
     const p = document.createElement("p");
@@ -613,57 +587,69 @@ function renderPosts() {
   posts.forEach((post) => postList.appendChild(createPostCard(post, post.id)));
 }
 
-// loads posts (with their ratings and comments) and saved ids, then draws the list
+// reads one page of posts (newest first). reset = start over from the newest
+async function loadPostPage(reset) {
+  const parts = [collection(db, "helpPosts"), orderBy("createdAt", "desc")];
+  if (!reset && lastPostDoc) parts.push(startAfter(lastPostDoc));
+  parts.push(limit(PAGE_SIZE));
+  const snapshot = await getDocs(query(...parts));
+
+  const page = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+  posts = reset ? page : posts.concat(page);
+  if (snapshot.docs.length > 0) lastPostDoc = snapshot.docs[snapshot.docs.length - 1];
+  hasMore = snapshot.docs.length === PAGE_SIZE;
+
+  readPostExtras();
+  await loadPublicProfiles([
+    ...posts.map((post) => post.ownerId),
+    ...comments.map((comment) => comment.userID),
+  ]);
+}
+
+// loads the first page (with ratings and comments) and my saved ids, then draws the list
 async function showPosts() {
   try {
-    const q = query(collection(db, "helpPosts"), orderBy("createdAt", "desc"));
-    const [snapshot] = await Promise.all([getDocs(q), loadMyUserData()]);
-
-    posts = snapshot.docs.map((d) => {
-      const post = d.data();
-      post.id = d.id;
-      return post;
-    });
-    readPostExtras();
-    await loadPublicAvatars([
-      ...posts.map((post) => post.ownerId),
-      ...comments.map((comment) => comment.userID),
-    ]);
+    lastPostDoc = null;
+    await Promise.all([loadPostPage(true), loadMyUserData()]);
     renderPosts();
-    scrollToLinkedPost();
+    await scrollToLinkedPost();
   } catch (error) {
     console.error("Error loading posts:", error);
     postList.innerHTML = `<p class="text-danger text-center">Could not load questions.</p>`;
   }
 }
 
-// saves or unsaves a post in users/{uid}/savedHelp (shown on the profile page)
+async function loadMorePosts() {
+  loadMoreBtn.disabled = true;
+  try {
+    await loadPostPage(false);
+    renderPosts();
+  } catch (error) {
+    console.error("Error loading more posts:", error);
+    alert("Could not load more questions. Please try again.");
+  } finally {
+    loadMoreBtn.disabled = false;
+  }
+}
+
+// saves or unsaves a post in users/{uid}.savedHelp (shown on the profile page)
 async function toggleSave(post, saveBtn) {
   if (currentUser === null) {
     alert("Please log in to save a post.");
     return;
   }
 
-  // saved posts are a map field on the user doc: savedHelp.<postId>
-  const userRef = doc(db, "users", currentUser.uid);
   const wasSaved = savedIds.has(post.id);
   saveBtn.disabled = true;
-
   try {
-    if (wasSaved) {
-      await updateDoc(userRef, { ["savedHelp." + post.id]: deleteField() });
-      savedIds.delete(post.id);
-    } else {
-      // merge so it also works if the user doc doesn't exist yet
-      const item = {
-        title: post.question,
-        text: "Asked by " + authorName(post),
-        href: "community-help.html#post-" + post.id,
-        savedAt: serverTimestamp(),
-      };
-      await setDoc(userRef, { savedHelp: { [post.id]: item } }, { merge: true });
-      savedIds.add(post.id);
-    }
+    const item = {
+      title: post.question,
+      text: "Asked by " + postAuthor(post),
+      href: "community-help.html#post-" + post.id,
+    };
+    await setSaved(currentUser.uid, "savedHelp", post.id, wasSaved ? null : item);
+    if (wasSaved) savedIds.delete(post.id);
+    else savedIds.add(post.id);
     setSaveLook(saveBtn, !wasSaved);
   } catch (error) {
     alert(`Error saving post:\n${error.code || ""}\n${error.message || error}`);
@@ -672,13 +658,20 @@ async function toggleSave(post, saveBtn) {
   }
 }
 
-// coming from a saved link (#post-id): scroll to that post and highlight it
-function scrollToLinkedPost() {
+// coming from a saved link (#post-id): scroll to that post and highlight it.
+// Older posts may not be on the first page, so keep loading pages until it shows up.
+async function scrollToLinkedPost() {
   if (!location.hash.startsWith("#post-")) return;
-
-  const card = document.getElementById(location.hash.slice(1));
+  const targetId = location.hash.slice("#post-".length);
   // clear the hash so posting a question later doesn't scroll again
   history.replaceState(null, "", location.pathname);
+
+  while (!posts.some((post) => post.id === targetId) && hasMore) {
+    await loadPostPage(false);
+  }
+  renderPosts();
+
+  const card = document.getElementById("post-" + targetId);
   if (!card) return;
 
   card.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -691,6 +684,15 @@ function scrollToLinkedPost() {
     card.classList.add("border-0");
   }, 2500);
 }
+
+// phone header pencil button (site-navbar, href="#postForm"): scroll to the form
+// and put the cursor in it, so the keyboard opens even when the form is already on screen
+document.addEventListener("click", (e) => {
+  if (!e.target.closest('a[href="#postForm"]')) return;
+  e.preventDefault();
+  postForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  questionInput.focus({ preventScroll: true });
+});
 
 postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -715,8 +717,8 @@ postForm.addEventListener("submit", async (e) => {
     batch.set(postRef, {
       question: question,
       ownerId: uid,
-      ownerName: currentUser.displayName || currentUser.email,
-      ownerAvatar: myAvatar,
+      ownerName: myProfile.name,
+      ownerAvatar: myProfile.avatar,
       createdAt: serverTimestamp(),
     });
     batch.set(doc(db, "users", uid, "postedHelp", postRef.id), {
@@ -724,13 +726,12 @@ postForm.addEventListener("submit", async (e) => {
       href: "community-help.html#post-" + postRef.id,
       createdAt: serverTimestamp(),
     });
+    setPublicProfile(batch, uid, myProfile);
     await batch.commit();
     questionInput.value = "";
     await showPosts();
   } catch (error) {
-    alert(
-      `Error posting question:\n${error.code || ""}\n${error.message || error}`,
-    );
+    alert(`Error posting question:\n${error.code || ""}\n${error.message || error}`);
   } finally {
     postBtn.disabled = false;
   }
@@ -740,3 +741,4 @@ commentModalEl.addEventListener("hidden.bs.modal", () => {
   openPostId = null;
 });
 commentBtn.addEventListener("click", saveComment);
+loadMoreBtn.addEventListener("click", loadMorePosts);

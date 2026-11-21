@@ -5,6 +5,7 @@ import { db } from "/src/firebase-config.js";
 import { onAuthReady } from "/src/authentication.js";
 import { isAdmin } from "/src/admin-check.js";
 import { confirmDialog } from "/src/confirm-dialog.js";
+import { formatDate } from "/src/format.js";
 import {
   collection,
   collectionGroup,
@@ -58,13 +59,6 @@ let busy = false;
 
 // ---------- small helpers ----------
 
-function formatDate(timestamp) {
-  const date = timestamp?.toDate?.();
-  return date
-    ? date.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })
-    : "";
-}
-
 function plural(n, word) {
   return n + " " + word + (n === 1 ? "" : "s");
 }
@@ -88,12 +82,20 @@ function summarize(data) {
   return parts.join(" · ") || "(empty)";
 }
 
-// a batch can hold 500 writes, so big deletes go in chunks
-async function deleteRefs(refs) {
-  const unique = [...new Map(refs.map((ref) => [ref.path, ref])).values()];
-  for (let i = 0; i < unique.length; i += 450) {
+// deletes refs, and applies updates ({ ref, data }) to other docs. A batch can hold 500
+// writes, so big jobs go in chunks. Updates to docs being deleted are skipped (they'd fail).
+async function commitWrites(refs, updates = []) {
+  const deletes = [...new Map(refs.map((ref) => [ref.path, ref])).values()];
+  const deleting = new Set(deletes.map((ref) => ref.path));
+  const writes = [
+    ...deletes.map((ref) => (batch) => batch.delete(ref)),
+    ...updates
+      .filter((update) => !deleting.has(update.ref.path))
+      .map((update) => (batch) => batch.update(update.ref, update.data)),
+  ];
+  for (let i = 0; i < writes.length; i += 450) {
     const batch = writeBatch(db);
-    unique.slice(i, i + 450).forEach((ref) => batch.delete(ref));
+    writes.slice(i, i + 450).forEach((write) => write(batch));
     await batch.commit();
   }
 }
@@ -409,6 +411,29 @@ async function refsForUser(uid, alsoContent) {
   return refs;
 }
 
+// what these users left on other people's content: comments and ratings on help posts,
+// "I've seen this" on reports. Removing them keeps the counts honest.
+async function marksByUsers(uids) {
+  const [posts, reports] = await Promise.all([
+    getDocs(collection(db, "helpPosts")),
+    getDocs(collection(db, "scamReports")),
+  ]);
+  const updates = [];
+  const removeEntries = (d, fieldNames) => {
+    const data = d.data();
+    const fields = {};
+    uids.forEach((uid) => {
+      fieldNames.forEach((field) => {
+        if (Object.hasOwn(data[field] || {}, uid)) fields[field + "." + uid] = deleteField();
+      });
+    });
+    if (Object.keys(fields).length > 0) updates.push({ ref: d.ref, data: fields });
+  };
+  posts.docs.forEach((d) => removeEntries(d, ["ratings", "comments"]));
+  reports.docs.forEach((d) => removeEntries(d, ["seenBy"]));
+  return updates;
+}
+
 async function deleteSelected() {
   const chosen = rows.filter((row) => selected.has(row.path));
   if (chosen.length === 0) return;
@@ -417,7 +442,7 @@ async function deleteSelected() {
   let message = "This can't be undone.";
   if (isUsers) {
     message =
-      "Their profile, history and saved items will be deleted" +
+      "Their profile, history, saved items, comments, ratings and \"I've seen this\" marks will be deleted" +
       (alsoContentEl.checked ? ", along with their help posts and scam reports" : "") +
       ". Their login stays: remove it in Firebase Authentication if needed. This can't be undone.";
   }
@@ -431,12 +456,14 @@ async function deleteSelected() {
   setBusy(true);
   try {
     let refs = [];
+    let updates = [];
     if (isUsers) {
       for (const row of chosen) refs.push(...(await refsForUser(row.uid, alsoContentEl.checked)));
+      updates = await marksByUsers(chosen.map((row) => row.uid));
     } else {
       chosen.forEach((row) => refs.push(row.ref, ...(row.alsoDelete || [])));
     }
-    await deleteRefs(refs);
+    await commitWrites(refs, updates);
 
     rows = rows.filter((row) => !selected.has(row.path));
     selected.clear();
