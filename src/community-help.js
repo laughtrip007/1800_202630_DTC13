@@ -321,7 +321,7 @@ function createCommentCard(comment, compact = false) {
   header.append(createAvatarImg(comment.userID, comment.userAvatar, 24), author, time);
 
   const text = document.createElement("p");
-  text.className = compact ? "mb-0 text-truncate-2" : "mb-1";
+  text.className = compact ? "mb-0 text-break text-truncate-2" : "mb-1 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = comment.text;
 
@@ -350,7 +350,7 @@ function showComments() {
 
   commentPost.innerHTML = "";
   const text = document.createElement("p");
-  text.className = "fs-5 mb-0";
+  text.className = "fs-5 mb-0 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = post.question;
   commentPost.append(createPostHeader(post), text);
@@ -529,7 +529,7 @@ function createPostCard(post, id) {
   const header = createPostHeader(post);
 
   const text = document.createElement("p");
-  text.className = "card-text mb-0";
+  text.className = "card-text mb-0 text-break";
   text.style.whiteSpace = "pre-wrap";
   text.textContent = post.question;
 
@@ -684,6 +684,15 @@ async function scrollToLinkedPost() {
     card.classList.add("border-0");
   }, 2500);
 }
+
+// phone header pencil button (site-navbar, href="#postForm"): scroll to the form
+// and put the cursor in it, so the keyboard opens even when the form is already on screen
+document.addEventListener("click", (e) => {
+  if (!e.target.closest('a[href="#postForm"]')) return;
+  e.preventDefault();
+  postForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  questionInput.focus({ preventScroll: true });
+});
 
 postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
