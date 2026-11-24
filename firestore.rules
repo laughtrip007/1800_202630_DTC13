@@ -18,10 +18,45 @@ service cloud.firestore {
                .diff(resource.data.get(field, {}))
                .affectedKeys().hasOnly([request.auth.uid]);
     }
+    // admins/{uid} is added by hand in the Firebase console, never from the app
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
     // my rating is either removed or a whole number 1-5
     function validRating() {
       let mine = request.resource.data.get("ratings", {}).get(request.auth.uid, 0);
       return mine == 0 || (mine is int && mine >= 1 && mine <= 5);
+    }
+    // a non-empty string of at most max characters
+    function validText(value, max) {
+      return value is string && value.size() > 0 && value.size() <= max;
+    }
+    // the fields this update changes
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    // older reports kept the author's uid in "owner"
+    function ownerOf(data) {
+      return data.get("ownerId", data.get("owner", ""));
+    }
+    // a new post or report: written by me, with a real name, a picture or null,
+    // and the server's time (so the date can't be faked)
+    function validAuthor() {
+      let data = request.resource.data;
+      return isMe(data.ownerId)
+             && validText(data.ownerName, 50)
+             && (data.ownerAvatar == null || data.ownerAvatar is map)
+             && data.createdAt == request.time;
+    }
+
+    // admin page (admin.html): admins can read and delete anything, including old collections
+    match /{document=**} {
+      allow read, delete: if isAdmin();
+    }
+
+    // lets the app check if I'm an admin; no one can write here from the app
+    match /admins/{uid} {
+      allow read: if isMe(uid);
     }
 
     match /users/{uid} {
@@ -35,32 +70,52 @@ service cloud.firestore {
       }
     }
 
-    // public link counts: anyone can read, a check can only add 1
-    match /links/{linkId} {
+    // each user's current name and avatar, so posts show them: anyone signed in reads, owner writes
+    match /publicProfiles/{uid} {
       allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.checkCount == 1;
-      allow update: if signedIn()
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(["checkCount", "results", "lastResult", "lastCheckedAt"])
-                    && request.resource.data.checkCount == resource.data.checkCount + 1;
+      allow create, update: if isMe(uid)
+                            && request.resource.data.keys().hasOnly(["name", "avatar"])
+                            && (!("name" in request.resource.data)
+                                || validText(request.resource.data.name, 50));
     }
 
-    // scam reports: author edits and deletes
+    // scam reports: the author can edit the text or delete; anyone else can add or remove
+    // their own "I've seen this" (not the author, and no one can fake the count)
     match /scamReports/{reportId} {
       allow read: if signedIn();
-      allow create: if isMe(request.resource.data.ownerId);
-      allow update, delete: if isMe(resource.data.ownerId);
+      allow create: if validAuthor()
+                    && request.resource.data.keys().hasOnly(
+                         ["query", "details", "ownerId", "ownerName", "ownerAvatar", "createdAt"])
+                    && validText(request.resource.data.query, 120)
+                    && validText(request.resource.data.details, 5000);
+      allow update: if isMe(ownerOf(resource.data))
+                    && changedKeys().hasOnly(["query", "details"])
+                    && validText(request.resource.data.query, 120)
+                    && validText(request.resource.data.details, 5000);
+      allow delete: if isMe(ownerOf(resource.data));
+      allow update: if signedIn()
+                    && !isMe(ownerOf(resource.data))
+                    && changedKeys().hasOnly(["seenBy"])
+                    && onlyMyEntry("seenBy")
+                    && request.resource.data.get("seenBy", {}).get(request.auth.uid, true) == true;
+      // admins can remove anyone's "I've seen this" (when deleting a user)
+      allow update: if isAdmin() && changedKeys().hasOnly(["seenBy"]);
     }
 
-    // help posts: author deletes; anyone can rate/comment inside their own uid entry
+    // help posts: author deletes; anyone can rate/comment inside their own uid entry.
+    // New posts start with no ratings or comments, so no one can give themselves stars.
     match /helpPosts/{postId} {
       allow read: if signedIn();
-      allow create: if isMe(request.resource.data.ownerId);
+      allow create: if validAuthor()
+                    && request.resource.data.keys().hasOnly(
+                         ["question", "ownerId", "ownerName", "ownerAvatar", "createdAt"])
+                    && validText(request.resource.data.question, 1000);
       allow delete: if isMe(resource.data.ownerId);
+      // admins can remove anyone's comments or ratings
+      allow update: if isAdmin()
+                    && changedKeys().hasOnly(["ratings", "comments"]);
       allow update: if signedIn()
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(["ratings", "comments"])
+                    && changedKeys().hasOnly(["ratings", "comments"])
                     && onlyMyEntry("ratings")
                     && onlyMyEntry("comments")
                     && validRating();

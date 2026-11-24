@@ -6,7 +6,7 @@
 // Manages the login/signup form behaviour and redirects.
 // -------------------------------------------------------------
 
-import { loginUser, signupUser, authErrorMessage } from "/src/authentication.js";
+import { loginUser, signupUser, resetPassword, authErrorMessage } from "/src/authentication.js";
 
 // --- Login and Signup Page ---
 // Handles toggling between Login/Signup views and form submits
@@ -15,6 +15,8 @@ import { loginUser, signupUser, authErrorMessage } from "/src/authentication.js"
 function initAuthUI() {
   // --- DOM Elements ---
   const alertEl = document.getElementById("authAlert");
+  const infoEl = document.getElementById("authInfo");
+  const forgotLink = document.getElementById("forgotPassword");
   const loginView = document.getElementById("loginView");
   const signupView = document.getElementById("signupView");
   const toSignupBtn = document.getElementById("toSignup");
@@ -38,11 +40,19 @@ function initAuthUI() {
     errorTimeout = setTimeout(hideError, 5000); // Auto-hide after 5s
   }
 
-  // Hide error message
+  // Hide error message (and any success message)
   function hideError() {
     alertEl.classList.add("d-none");
     alertEl.textContent = "";
+    infoEl.classList.add("d-none");
+    infoEl.textContent = "";
     clearTimeout(errorTimeout);
+  }
+
+  function showInfo(msg) {
+    hideError();
+    infoEl.textContent = msg;
+    infoEl.classList.remove("d-none");
   }
 
   // Enable/disable submit button for forms
@@ -67,6 +77,25 @@ function initAuthUI() {
     setVisible(signupView, false);
     setVisible(loginView, true);
     loginView?.querySelector("input")?.focus();
+  });
+
+  // Forgot password: emails a reset link to the address typed above
+  forgotLink?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    hideError();
+    const email = document.querySelector("#loginEmail")?.value?.trim() ?? "";
+    if (!email) {
+      showError("Enter your email above, then tap Forgot password.");
+      document.querySelector("#loginEmail")?.focus();
+      return;
+    }
+    try {
+      await resetPassword(email);
+      showInfo("If an account uses " + email + ", we sent it a link to reset the password.");
+    } catch (err) {
+      showError(authErrorMessage(err));
+      console.error(err);
+    }
   });
 
   // Login form submit
@@ -100,6 +129,10 @@ function initAuthUI() {
     const password = document.querySelector("#signupPassword")?.value ?? "";
     if (!name || !email || !password) {
       showError("Please fill in name, email, and password.");
+      return;
+    }
+    if (name.length > 50) {
+      showError("Please keep your name under 50 characters.");
       return;
     }
     setSubmitDisabled(signupForm, true);

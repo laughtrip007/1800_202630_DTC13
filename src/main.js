@@ -5,8 +5,14 @@ import { doc, getDoc } from "firebase/firestore";
 onAuthReady(async (user) => {
   if (!user) return;
 
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const name = userDoc.exists() ? userDoc.data().name : user.displayName || user.email;
+  // name from the users doc; never "undefined", and no email on screen
+  let name = user.displayName || "SafeLink user";
+  try {
+    const data = (await getDoc(doc(db, "users", user.uid))).data();
+    if (data?.name) name = data.name;
+  } catch (error) {
+    console.error("Error loading name:", error);
+  }
   document.getElementById("name-goes-here").textContent = name + "!";
 });
 

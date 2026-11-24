@@ -16,6 +16,7 @@
       </div>
 
       <div id="authAlert" class="alert alert-danger d-none" role="alert"></div>
+      <div id="authInfo" class="alert alert-success d-none" role="status"></div>
 
       <!-- Login -->
       <section id="loginView" class="bg-white border rounded-3 shadow-sm p-4">
@@ -28,6 +29,9 @@
           <div class="mb-3">
             <label for="loginPassword" class="form-label">Password</label>
             <input type="password" id="loginPassword" class="form-control" autocomplete="current-password" required />
+            <div class="text-end mt-1">
+              <a href="#" id="forgotPassword" class="small link-success">Forgot password?</a>
+            </div>
           </div>
           <button type="submit" class="btn btn-success w-100">Log In</button>
         </form>
@@ -43,7 +47,7 @@
         <form id="signupForm" novalidate>
           <div class="mb-3">
             <label for="signupName" class="form-label">First and last name</label>
-            <input type="text" id="signupName" class="form-control" autocomplete="name" required />
+            <input type="text" id="signupName" class="form-control" autocomplete="name" maxlength="50" required />
           </div>
           <div class="mb-3">
             <label for="signupEmail" class="form-label">Email</label>

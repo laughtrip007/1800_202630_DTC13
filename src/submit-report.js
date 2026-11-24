@@ -1,18 +1,23 @@
 import { db } from "./firebase-config.js";
 import { onAuthReady } from "./authentication.js";
 import { collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
-import { loadAvatar } from "./avatar.js";
+import { DEFAULT_NAME, loadMyProfile, setPublicProfile } from "./public-profile.js";
 
 const form = document.getElementById("addReportForm");
 const submitBtn = document.getElementById("submitReportBtn");
 
 let currentUser = null;
-// my avatar, loaded in the background and copied into the report
-let myAvatarPromise = Promise.resolve(null);
+// my name and avatar (from my users doc), loaded in the background and copied into the report
+let myProfilePromise = Promise.resolve({ name: DEFAULT_NAME, avatar: null });
 
 onAuthReady((user) => {
   currentUser = user;
-  if (user) myAvatarPromise = loadAvatar(user.uid).catch(() => null);
+  if (user) {
+    myProfilePromise = loadMyProfile(user.uid).catch(() => ({
+      name: user.displayName || DEFAULT_NAME,
+      avatar: null,
+    }));
+  }
 });
 
 async function saveReport(event) {
@@ -33,7 +38,7 @@ async function saveReport(event) {
 
   submitBtn.disabled = true;
   const uid = currentUser.uid;
-  const ownerAvatar = await myAvatarPromise;
+  const me = await myProfilePromise;
 
   // make the id first so the user's postedReports entry can use the same one
   const reportRef = doc(collection(db, "scamReports"));
@@ -43,8 +48,8 @@ async function saveReport(event) {
     query: queryText,
     details: details,
     ownerId: uid,
-    ownerName: currentUser.displayName || currentUser.email,
-    ownerAvatar: ownerAvatar,
+    ownerName: me.name,
+    ownerAvatar: me.avatar,
     createdAt: serverTimestamp(),
   });
   batch.set(doc(db, "users", uid, "postedReports", reportRef.id), {
@@ -52,6 +57,8 @@ async function saveReport(event) {
     href: "scam-query.html?id=" + reportRef.id,
     createdAt: serverTimestamp(),
   });
+  // keep my public name/avatar current, so the report shows them
+  setPublicProfile(batch, uid, me);
 
   try {
     await batch.commit();

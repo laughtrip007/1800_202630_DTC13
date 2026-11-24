@@ -1,9 +1,9 @@
 // Avatars are { shape, color } (see FIRESTORE.md).
 // The user's own avatar is the `avatar` field on users/{uid}, which only they can read.
-// When they post or comment, a copy goes into the post (ownerAvatar / userAvatar) so
-// everyone sees it, the same way ownerName works. No avatar means the default icon.
+// It's also kept in publicProfiles/{uid} so everyone sees it on posts (see public-profile.js).
+// No avatar means the default icon.
 import { db } from "/src/firebase-config.js";
-import { doc, getDoc, setDoc, updateDoc, deleteField } from "firebase/firestore";
+import { doc, writeBatch, deleteField } from "firebase/firestore";
 
 export const DEFAULT_AVATAR = "images/default-avatar.svg";
 
@@ -99,16 +99,18 @@ export function avatarCopy(avatar) {
   return avatar?.shape ? { shape: avatar.shape, color: avatar.color } : null;
 }
 
-export async function loadAvatar(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  return avatarCopy(snap.data()?.avatar);
-}
-
-// merge, so the rest of the user doc is kept
+// saves to users/{uid} and publicProfiles/{uid}; merge keeps the other fields (like name)
 export async function saveAvatar(uid, avatar) {
-  await setDoc(doc(db, "users", uid), { avatar: avatarCopy(avatar) }, { merge: true });
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid), { avatar: avatarCopy(avatar) }, { merge: true });
+  batch.set(doc(db, "publicProfiles", uid), { avatar: avatarCopy(avatar) }, { merge: true });
+  await batch.commit();
 }
 
+// publicProfiles keeps avatar: null (not deleted), so old posts don't fall back to their copy
 export async function removeAvatar(uid) {
-  await updateDoc(doc(db, "users", uid), { avatar: deleteField() });
+  const batch = writeBatch(db);
+  batch.update(doc(db, "users", uid), { avatar: deleteField() });
+  batch.set(doc(db, "publicProfiles", uid), { avatar: null }, { merge: true });
+  await batch.commit();
 }

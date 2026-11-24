@@ -10,12 +10,12 @@
     <site-navbar></site-navbar>
 
     <main class="container page py-4">
-      <a href="scam-reports.html" class="btn btn-outline-success d-inline-flex align-items-center gap-2 mb-3">
+      <a href="scam-reports.html" class="btn btn-outline-success d-none d-md-inline-flex align-items-center gap-2 mb-3">
         <i class="bi bi-arrow-left" aria-hidden="true"></i>
         <span>All Reports</span>
       </a>
 
-      <div class="card border-0 shadow-sm mb-4 text-center bg-success-subtle rounded-3">
+      <div class="card border-0 shadow-sm mb-4 text-center bg-success-subtle rounded-3 d-none d-md-block">
         <div class="card-body py-3">
           <h1 class="h3 fw-bold mb-0 text-success">Submit a Scam Report</h1>
         </div>
@@ -30,7 +30,7 @@
             </div>
             <div class="mb-3">
               <label for="detailsInput" class="form-label fw-semibold">Explain what you found.</label>
-              <textarea id="detailsInput" class="form-control" rows="5" placeholder="What happened? Include the link, phone number or message if you have it." required></textarea>
+              <textarea id="detailsInput" class="form-control" rows="5" maxlength="5000" placeholder="What happened? Include the link, phone number or message if you have it." required></textarea>
             </div>
             <button id="submitReportBtn" type="submit" class="btn btn-success w-100">Enter report</button>
           </form>

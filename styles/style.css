@@ -12,6 +12,33 @@ body {
   min-width: 80px;
 }
 
+/* phone header */
+site-navbar {
+  display: block;
+}
+
+@media (max-width: 767.98px) {
+  site-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+  }
+}
+
+.app-bar {
+  min-height: 56px;
+}
+
+.app-bar-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  padding: 0;
+}
+
 /* page header */
 .page-header {
   background-color: var(--bs-success);
@@ -28,7 +55,7 @@ body {
     box-shadow 0.2s ease;
 }
 
-.feature-card:hover,
+/* keyboard focus works everywhere */
 a:focus-visible .feature-card {
   transform: translateY(-5px);
   background-color: #d1e7dd;
@@ -36,8 +63,19 @@ a:focus-visible .feature-card {
   box-shadow: 0 0.75rem 1.5rem rgba(25, 135, 84, 0.2) !important;
 }
 
-.feature-card:hover h2 {
-  color: #146c43;
+/* hover only with a mouse: on phones a tap counts as hover and the card
+   would stay lifted after going back to this page */
+@media (hover: hover) {
+  .feature-card:hover {
+    transform: translateY(-5px);
+    background-color: #d1e7dd;
+    border-color: #198754 !important;
+    box-shadow: 0 0.75rem 1.5rem rgba(25, 135, 84, 0.2) !important;
+  }
+
+  .feature-card:hover h2 {
+    color: #146c43;
+  }
 }
 
 /* bottom nav */
@@ -50,9 +88,14 @@ a:focus-visible .feature-card {
   opacity: 0.75;
 }
 
-.bottom-nav .nav-link.active,
-.bottom-nav .nav-link:hover {
+.bottom-nav .nav-link.active {
   opacity: 1;
+}
+
+@media (hover: hover) {
+  .bottom-nav .nav-link:hover {
+    opacity: 1;
+  }
 }
 
 .bottom-nav .nav-link.active small {
@@ -114,6 +157,15 @@ a:focus-visible .feature-card {
 }
 
 /* profile lists */
+.profile-section-title {
+  margin: 0 0 0.5rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
 .profile-accordion {
   --bs-accordion-active-bg: #d1e7dd;
   --bs-accordion-active-color: #0f5132;
@@ -181,8 +233,10 @@ a:focus-visible .feature-card {
     transform 0.15s ease;
 }
 
-.avatar-option:hover {
-  transform: scale(1.06);
+@media (hover: hover) {
+  .avatar-option:hover {
+    transform: scale(1.06);
+  }
 }
 
 .avatar-option[aria-pressed="true"] {
@@ -211,4 +265,35 @@ a:focus-visible .feature-card {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* community help: the pencil button in the phone header scrolls here;
+   leave room for the sticky header so "Ask the Community" isn't hidden */
+#postForm {
+  scroll-margin-top: 5rem;
+}
+
+/* community help: tapping a post opens its comments */
+.help-post {
+  cursor: pointer;
+}
+
+/* admin page tabs in the app's green instead of Bootstrap blue */
+.admin-tabs {
+  --bs-nav-link-color: var(--bs-success);
+  --bs-nav-link-hover-color: var(--bs-success-text-emphasis);
+  --bs-nav-pills-link-active-bg: var(--bs-success);
+}
+
+/* confirm dialog opened on top of another modal (e.g. deleting a comment) */
+.confirm-modal {
+  z-index: 1065;
+}
+.modal-backdrop ~ .modal-backdrop {
+  z-index: 1060;
+}
+
+/* scam reports sort: rounded green segmented control */
+.sort-options .btn {
+  --bs-btn-border-radius: 999px;
 }

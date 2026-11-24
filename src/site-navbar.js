@@ -1,10 +1,60 @@
 import { logoutUser, onAuthReady } from "/src/authentication.js";
 import logoUrl from "/images/safelink-logo.png";
 
+// phone header for each page. pages not listed (main, login) don't get one
+const pages = {
+  "features.html": { title: "Features" },
+  "profile.html": { title: "Profile" },
+  "admin.html": { title: "Admin", back: "profile.html" },
+  "link-checker.html": { title: "Link Checker", back: "features.html" },
+  "analyzing.html": { title: "Link Checker" },
+  "link-result.html": { title: "Link Checker", back: "link-checker.html" },
+  "scam-reports.html": {
+    title: "Scam Reports",
+    back: "features.html",
+    action: { href: "submit-report.html", icon: "bi-plus-lg", label: "Submit a report" },
+  },
+  "scam-query.html": { title: "Scam Report", back: "scam-reports.html" },
+  "submit-report.html": { title: "Submit a Report", back: "scam-reports.html" },
+  "community-help.html": {
+    title: "Community Help",
+    back: "features.html",
+    action: { href: "#postForm", icon: "bi-pencil-square", label: "Ask a question" },
+  },
+};
+
+
+function iconLink(href, icon, label) {
+  return `
+    <a class="btn btn-link text-white app-bar-btn" href="${href}" aria-label="${label}" title="${label}">
+      <i class="bi ${icon}" aria-hidden="true"></i>
+    </a>`;
+}
+
+function phoneHeader(page) {
+  if (!page) return "";
+  // empty spans keep the title centred
+  const left = page.back ? iconLink(page.back, "bi-arrow-left", "Back") : `<span class="app-bar-btn"></span>`;
+  const right = page.action
+    ? iconLink(page.action.href, page.action.icon, page.action.label)
+    : `<span class="app-bar-btn"></span>`;
+
+  return `
+    <nav class="navbar bg-success d-md-none app-bar" data-bs-theme="dark">
+      <div class="container-fluid flex-nowrap">
+        ${left}
+        <span class="navbar-brand fw-semibold mx-0 text-truncate">${page.title}</span>
+        ${right}
+      </div>
+    </nav>`;
+}
+
 class SiteNavbar extends HTMLElement {
   connectedCallback() {
+    const current = location.pathname.split("/").pop();
+
     this.innerHTML = `
-      <nav class="navbar bg-success" data-bs-theme="dark">
+      <nav class="navbar bg-success d-none d-md-flex" data-bs-theme="dark">
         <div class="container-fluid">
           <a class="navbar-brand d-flex align-items-center gap-2" href="main.html">
             <img src="${logoUrl}" alt="" height="36" />
@@ -16,6 +66,7 @@ class SiteNavbar extends HTMLElement {
           </div>
         </div>
       </nav>
+      ${phoneHeader(pages[current])}
     `;
 
     const authControls = this.querySelector("#authControls");

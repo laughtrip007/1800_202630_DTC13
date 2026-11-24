@@ -15,7 +15,7 @@ const tabs = [
       "community-help.html",
     ],
   },
-  { href: "profile.html", icon: "bi-person-circle", activeIcon: "bi-person-circle", label: "Profile", pages: ["profile.html"] },
+  { href: "profile.html", icon: "bi-person-circle", activeIcon: "bi-person-circle", label: "Profile", pages: ["profile.html", "admin.html"] },
 ];
 
 class BottomNav extends HTMLElement {

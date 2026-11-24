@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin · SafeLink</title>
+    <script type="module" src="/src/app.js"></script>
+  </head>
+  <body class="bg-body-tertiary" hidden>
+    <site-navbar></site-navbar>
+
+    <main class="container page py-4">
+      <a href="profile.html" class="btn btn-outline-success d-none d-md-inline-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>Profile</span>
+      </a>
+      <div class="card border-0 shadow-sm mb-4 text-center page-header bg-success-subtle rounded-3 d-none d-md-block">
+        <div class="card-body py-3">
+          <h1 class="h3 fw-bold mb-0 text-success">Admin</h1>
+        </div>
+      </div>
+
+      <p id="adminStatus" class="text-body-secondary text-center">Checking access…</p>
+
+      <div id="adminContent" class="d-none">
+        <ul class="nav nav-pills nav-fill flex-nowrap overflow-auto mb-3 admin-tabs" id="adminTabs">
+          <li class="nav-item">
+            <button class="nav-link active text-nowrap" type="button" data-tab="helpPosts">Help posts</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link text-nowrap" type="button" data-tab="scamReports">Reports</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link text-nowrap" type="button" data-tab="users">Users</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link text-nowrap" type="button" data-tab="linkChecks">Link checks</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link text-nowrap" type="button" data-tab="other">Other data</button>
+          </li>
+        </ul>
+
+        <select id="otherSource" class="form-select mb-3 d-none" aria-label="Collection to show"></select>
+
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+            <input
+              id="adminSearch"
+              type="search"
+              class="form-control flex-grow-1"
+              style="min-width: 12rem; width: auto"
+              placeholder="Filter…"
+              aria-label="Filter"
+            />
+            <div class="form-check mb-0">
+              <input id="selectAll" class="form-check-input" type="checkbox" />
+              <label for="selectAll" class="form-check-label">Select all</label>
+            </div>
+            <div id="alsoContentWrap" class="form-check mb-0 d-none">
+              <input id="alsoContent" class="form-check-input" type="checkbox" />
+              <label for="alsoContent" class="form-check-label">Also delete their posts and reports</label>
+            </div>
+            <button id="refreshBtn" type="button" class="btn btn-outline-secondary" aria-label="Refresh" title="Refresh">
+              <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            </button>
+            <button id="deleteSelectedBtn" type="button" class="btn btn-danger" disabled>Delete selected (0)</button>
+          </div>
+        </div>
+
+        <p id="adminCount" class="small text-body-secondary mb-2"></p>
+        <div id="adminList" class="list-group shadow-sm mb-4"></div>
+      </div>
+    </main>
+
+    <bottom-nav></bottom-nav>
+    <script type="module" src="/src/admin.js"></script>
+  </body>
+</html>
