@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Home · SafeLink</title>
     <script type="module" src="/src/app.js"></script>
   </head>
@@ -11,12 +11,58 @@
 
     <main class="container page py-4">
       <section class="mb-4 text-center">
-        <img src="images/safelink-logo.png" alt="SafeLink" width="360" class="img-fluid" />
+        <img src="images/safelink-logo.png" alt="SafeLink" width="240" class="img-fluid" />
         <p class="text-body-secondary mt-2 mb-0">Stay safer online.</p>
-        <h1 class="h4 fw-bold mt-3">Welcome, <span id="name-goes-here">!</span></h1>
+        <h1 class="h4 fw-bold mt-3 mb-0">Welcome, <span id="name-goes-here">!</span></h1>
       </section>
 
-      <section class="card border-0 shadow-sm mb-4 tip-card">
+      <!-- the most used feature, right on the home page (src/link-checker.js) -->
+      <section class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <form id="linkForm" novalidate>
+            <label for="linkInput" class="form-label h5 fw-bold d-flex align-items-center gap-2">
+              <i class="bi bi-link-45deg text-success" aria-hidden="true"></i>
+              Check a Link
+            </label>
+            <input
+              id="linkInput"
+              type="url"
+              inputmode="url"
+              autocomplete="off"
+              class="form-control form-control-lg mb-3"
+              placeholder="Paste a link here"
+            />
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success btn-lg">Analyze Link</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <a href="scam-reports.html" class="d-block h-100 text-decoration-none text-dark">
+            <div class="card feature-card border-0 shadow-sm h-100">
+              <div class="card-body text-center py-3">
+                <i class="bi bi-exclamation-triangle d-block fs-2 text-success mb-1" aria-hidden="true"></i>
+                <span class="fw-semibold">Scam Reports</span>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6">
+          <a href="community-help.html" class="d-block h-100 text-decoration-none text-dark">
+            <div class="card feature-card border-0 shadow-sm h-100">
+              <div class="card-body text-center py-3">
+                <i class="bi bi-people d-block fs-2 text-success mb-1" aria-hidden="true"></i>
+                <span class="fw-semibold">Community Help</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <section class="card border-0 shadow-sm tip-card">
         <div class="card-body">
           <h2 class="h5 fw-bold mb-3">
             <i class="bi bi-lightbulb text-success me-1" aria-hidden="true"></i>
@@ -25,13 +71,10 @@
           <p id="tipText" class="tip-text mb-0" aria-live="polite"></p>
         </div>
       </section>
-
-      <div class="d-grid">
-        <a href="features.html" class="btn btn-success btn-lg">Explore Features</a>
-      </div>
     </main>
 
     <bottom-nav></bottom-nav>
     <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/link-checker.js"></script>
   </body>
 </html>

@@ -1,6 +1,48 @@
-/* space for bottom nav */
+/* space for bottom nav, plus the iPhone home bar and notch (viewport-fit=cover) */
 body {
-  padding-bottom: 90px;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* while app.js checks the login: keep the header and bottom nav and show a
+   spinner, instead of a blank page */
+body[hidden] {
+  display: block !important;
+}
+
+body[hidden] > :not(site-navbar, bottom-nav) {
+  display: none !important;
+}
+
+body[hidden]::after {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border: 0.3rem solid var(--bs-success);
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0;
+  /* only shows up if loading takes longer than 0.3s */
+  animation:
+    spinner-border 0.75s linear infinite,
+    spinner-show 0s 0.3s forwards;
+}
+
+@keyframes spinner-show {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[hidden]::after {
+    animation-duration: 1.5s, 0s;
+  }
 }
 
 .page {
@@ -97,6 +139,9 @@ a:focus-visible .feature-card {
 /* bottom nav */
 .bottom-nav {
   min-height: 70px;
+  padding-bottom: calc(var(--bs-navbar-padding-y) + env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .bottom-nav .nav-link {
@@ -275,6 +320,26 @@ a:focus-visible .feature-card {
 
   .avatar-option:hover {
     transform: none;
+  }
+}
+
+/* touch screens: small buttons get at least ~44px to tap */
+@media (pointer: coarse) {
+  .btn-sm,
+  .btn-group-sm > .btn {
+    --bs-btn-padding-y: 0.6rem;
+    --bs-btn-padding-x: 0.75rem;
+  }
+
+  /* icon / text buttons with no padding: bigger tap area, same look */
+  .btn.p-0 {
+    position: relative;
+  }
+
+  .btn.p-0::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
   }
 }
 

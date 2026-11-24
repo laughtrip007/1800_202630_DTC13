@@ -95,7 +95,7 @@ onAuthStateChanged(auth, async (user) => {
       collection(db, "users", user.uid, "linkChecks"),
     );
 
-    // The total number of checks, shown in the counter card
+    // The total number of checks, shown under the history heading
     counterElement.textContent = snapshot.size;
 
     if (snapshot.empty) {
