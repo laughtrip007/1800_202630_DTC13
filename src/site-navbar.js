@@ -24,9 +24,9 @@ const pages = {
 };
 
 
-function iconLink(href, icon, label) {
+function iconLink(href, icon, label, attrs = "") {
   return `
-    <a class="btn btn-link text-white app-bar-btn" href="${href}" aria-label="${label}" title="${label}">
+    <a class="btn btn-link text-white app-bar-btn" href="${href}" aria-label="${label}" title="${label}" ${attrs}>
       <i class="bi ${icon}" aria-hidden="true"></i>
     </a>`;
 }
@@ -34,7 +34,7 @@ function iconLink(href, icon, label) {
 function phoneHeader(page) {
   if (!page) return "";
   // empty spans keep the title centred
-  const left = page.back ? iconLink(page.back, "bi-arrow-left", "Back") : `<span class="app-bar-btn"></span>`;
+  const left = page.back ? iconLink(page.back, "bi-arrow-left", "Back", "data-back") : `<span class="app-bar-btn"></span>`;
   const right = page.action
     ? iconLink(page.action.href, page.action.icon, page.action.label)
     : `<span class="app-bar-btn"></span>`;
@@ -68,6 +68,17 @@ class SiteNavbar extends HTMLElement {
       </nav>
       ${phoneHeader(pages[current])}
     `;
+
+    // came straight from the back page: go back in history instead, so that
+    // page keeps its scroll position and search (like the phone's back button)
+    this.querySelector("[data-back]")?.addEventListener("click", (event) => {
+      if (!document.referrer || history.length < 2) return;
+      const from = new URL(document.referrer);
+      if (from.origin === location.origin && from.pathname.split("/").pop() === pages[current].back) {
+        event.preventDefault();
+        history.back();
+      }
+    });
 
     const authControls = this.querySelector("#authControls");
 

@@ -1,4 +1,4 @@
-// Grab the form and the text input from link-checker.html
+// Grab the form and the text input (on link-checker.html and the home page)
 const linkForm = document.querySelector("#linkForm");
 const linkInput = document.querySelector("#linkInput");
 

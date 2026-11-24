@@ -17,6 +17,53 @@ let currentUser = null;
 let savedIds = new Set(); // reports I saved (users/{uid}.savedReports)
 let loaded = false; // reports have been read; until then the list keeps "Loading…" or the error
 
+// coming back from a report: put the search, sort and scroll position back.
+// saved when leaving the page, used only on a back / forward visit
+const LIST_STATE_KEY = "scamReportsList";
+const SORTS = ["newest", "oldest", "seen"];
+let restoreState = null;
+
+if (performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
+  try {
+    restoreState = JSON.parse(sessionStorage.getItem(LIST_STATE_KEY));
+  } catch {
+    restoreState = null;
+  }
+}
+
+if (restoreState) {
+  // the list loads later, so the browser can't scroll there by itself
+  history.scrollRestoration = "manual";
+  searchInput.value = restoreState.search || "";
+  if (SORTS.includes(restoreState.sort)) {
+    sortBy = restoreState.sort;
+    document.querySelector(`input[name="sort"][value="${sortBy}"]`).checked = true;
+  }
+}
+
+window.addEventListener("pagehide", () => {
+  try {
+    const state = { y: window.scrollY, search: searchInput.value, sort: sortBy };
+    sessionStorage.setItem(LIST_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // private mode etc.: just don't restore
+  }
+});
+
+// the body stays hidden until app.js finishes the login check
+function whenVisible(callback) {
+  if (!document.body.hidden) {
+    requestAnimationFrame(callback);
+    return;
+  }
+  const observer = new MutationObserver(() => {
+    if (document.body.hidden) return;
+    observer.disconnect();
+    requestAnimationFrame(callback);
+  });
+  observer.observe(document.body, { attributes: true, attributeFilter: ["hidden"] });
+}
+
 onAuthReady(async (user) => {
   currentUser = user;
   if (user === null) return;
@@ -184,6 +231,12 @@ async function loadReports() {
 
     loaded = true;
     showReports();
+
+    if (restoreState) {
+      const y = restoreState.y;
+      restoreState = null;
+      whenVisible(() => window.scrollTo(0, y));
+    }
   } catch (error) {
     console.error("Error loading reports:", error);
     reportList.innerHTML = `<p class="text-danger text-center">Could not load reports.</p>`;
